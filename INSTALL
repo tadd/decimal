@@ -1,0 +1,5 @@
+$ ruby extconf.rb
+$ make
+$ su
+# make install
+

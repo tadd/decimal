@@ -1,0 +1,6 @@
+decimal.o: decimal.c \
+$(hdrdir)/ruby.h $(topdir)/config.h $(hdrdir)/defines.h $(hdrdir)/missing.h \
+$(hdrdir)/intern.h $(hdrdir)/util.h
+
+CFLAGS += -Wall -Wextra -DDEBUG -Wno-parentheses
+
