@@ -1,6 +1,3 @@
-decimal.o: decimal.c \
+decimal.o: decimal.c inum18.h \
 $(hdrdir)/ruby.h $(topdir)/config.h $(hdrdir)/defines.h $(hdrdir)/missing.h \
 $(hdrdir)/intern.h $(hdrdir)/util.h
-
-CFLAGS += -Wall -Wextra -DDEBUG -Wno-parentheses
-

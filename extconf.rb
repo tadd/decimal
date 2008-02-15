@@ -1,6 +1,3 @@
-require 'mkmf'
-have_func 'rb_big_cmp'
-have_func 'rb_big_eq'
-have_func 'rb_big_div'
-have_func 'rb_big_modulo'
-create_makefile 'decimal'
+require "mkmf"
+(cflags = arg_config("--cflags")) && $CFLAGS << " #{cflags}"
+create_makefile "decimal"
