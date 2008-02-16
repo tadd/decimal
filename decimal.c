@@ -3,6 +3,17 @@
  *              a multi-precision decimal arithmetic library
  *
  *  Copyright (C) 2003-2008 Tadashi Saito
+ *
+ *  This program is free software; you can
+ *    0. use this program for any purpose.
+ *    1. study how the program works, and adapt it to your needs.
+ *    2. redistribute copies so you can help your neighbor.
+ *    3. improve the program, and release your improvements
+ *       to the public, so that the whole community benefits.
+ *  with the accessibility to the source code.
+ *
+ *  This program is licensed under the terms of the Ruby License.
+ *  See the file "COPYING" for more details.
  */
 
 #include <ctype.h>
@@ -68,7 +79,7 @@ static Decimal *const DEC_NINF = (Decimal *)7;
 /* and their representation as Ruby object */
 static VALUE VALUE_NaN, VALUE_PINF, VALUE_NINF;
 
-/* special contants - i.e. non-zero and non-fixnum constants */
+/* special constants - i.e. non-zero and non-fixnum constants */
 /* used for signed zeros that never meet any fixnums nor normal VALUEs */
 static const VALUE PZERO = 2, NZERO = 6;
 #define dec_pzero() WrapDecimal(inum_to_dec(PZERO))
@@ -126,7 +137,7 @@ dec_free(void *p)
     static void *prev = NULL;
 
     if (p == prev) {
-        fprintf(stderr, "dec_free(): double-free occured on %p\n", p);
+        fprintf(stderr, "dec_free(): double-free occurred on %p\n", p);
     }
     xfree(p);
     prev = p;
