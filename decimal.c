@@ -72,7 +72,7 @@ static Decimal *const DEC_NINF = (Decimal *)7;
 /* and their representation as Ruby object */
 static VALUE VALUE_NaN, VALUE_PINF, VALUE_NINF;
 
-/* special constants - i.e. non-zero and non-fixnum constants */
+/* special constants - i.e. non-zero and non-fixnum */
 /* used for signed zeros that never meet any fixnums nor normal VALUEs */
 static const VALUE PZERO = 2, NZERO = 6;
 #define dec_pzero() WrapDecimal(inum_to_dec(PZERO))
@@ -101,8 +101,6 @@ static VALUE ROUND_UNNECESSARY;
 } while (0)
 #define WrapDecimal(d) \
     Data_Wrap_Struct(cDecimal, dec_mark, dec_free, d)
-#define WrapImmediate(d) \
-    Data_Wrap_Struct(cDecimal, NULL, NULL, d)
 #define DECIMAL_P(d) (CLASS_OF(d) == cDecimal)
 
 static VALUE cDecimal;
@@ -649,7 +647,7 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     long diff;
     int lower;
     int trailing_nonzero, negative;
-    VALUE inum, inumabs, shift, tmp, ary;
+    VALUE inum, inumabs, shift, ary;
 
     if (d == DEC_PINF) rb_raise(eDomainError, "Infinity");
     if (d == DEC_NINF) rb_raise(eDomainError, "-Infinity");
@@ -706,14 +704,12 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     else if (mode == ROUND_HALF_DOWN || /* needs lower digit */
 	     mode == ROUND_HALF_UP ||
 	     mode == ROUND_HALF_EVEN) {
-        if (diff != 1)
+        if (diff > 1) { /* needs shift */
             shift = inum_lshift(INT2FIX(1), diff-1);
-        else
-            shift = INT2FIX(1); /* FIXME!!! */
-	ary = INUM_DIVMOD(inumabs, shift);
-	tmp = RARRAY(ary)->ptr[0];
+            inumabs = INUM_DIV(inumabs, shift);
+        }
 
-	ary = INUM_DIVMOD(tmp, INT2FIX(10));
+	ary = INUM_DIVMOD(inumabs, INT2FIX(10));
 	inum = RARRAY(ary)->ptr[0];
 	lower = FIX2INT(RARRAY(ary)->ptr[1]);
 	if (mode == ROUND_HALF_DOWN) {
