@@ -176,7 +176,7 @@ cstr_to_dec(const char *str)
 
     assoc[0] = (VALUE)s;
     assoc[1] = (VALUE)str;
-    if (ss = strpbrk(s, "be")) {
+    if (ss = strpbrk(s, "Ee")) {
 	*ss++ = '\0'; /* for strchr() */
 	inum = rb_rescue(cstr_to_inum, (VALUE)ss, invalid_str, (VALUE)assoc);
 	scale -= NUM2LONG(inum);
