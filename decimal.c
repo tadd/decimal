@@ -284,8 +284,8 @@ dec_scale(VALUE self)
     Decimal *d;
 
     GetDecimal(self, d); 
-    if (!DEC_IMMEDIATE_P(d)) return LONG2NUM(d->scale);
-    return Qnil;
+    if (DEC_IMMEDIATE_P(d)) return Qnil;
+    return LONG2NUM(d->scale);
 }
 
 static VALUE
@@ -294,10 +294,8 @@ dec_unscaled_value(VALUE self)
     Decimal *d;
 
     GetDecimal(self, d);
-    if (!DEC_IMMEDIATE_P(d)) {
-	return INUM_SPZERO_P(d->inum) ? INT2FIX(0) : d->inum;
-    }
-    return Qnil;
+    if (DEC_IMMEDIATE_P(d)) return Qnil;
+    return INUM_SPZERO_P(d->inum) ? INT2FIX(0) : d->inum;
 }
 #endif
 
