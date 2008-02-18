@@ -4,16 +4,9 @@
  *
  *  Copyright (C) 2003-2008 Tadashi Saito
  *
- *  This program is free software; you can
- *    0. use this program for any purpose.
- *    1. study how the program works, and adapt it to your needs.
- *    2. redistribute copies so you can help your neighbor.
- *    3. improve the program, and release your improvements
- *       to the public, so that the whole community benefits.
- *  with the accessibility to the source code.
- *
- *  This program is licensed under the terms of the Ruby License.
- *  See the file "COPYING" for more details.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the Ruby License. See the file "COPYING" for
+ *  more details.
  */
 
 #include <ctype.h>
