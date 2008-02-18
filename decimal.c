@@ -170,7 +170,7 @@ cstr_to_dec(const char *str)
 {
     Decimal *d;
     char *const s = strdup(str);
-    char *ss, *ss2;
+    char *ss;
     long scale = 0;
     VALUE inum, assoc[2];
 
@@ -186,11 +186,11 @@ cstr_to_dec(const char *str)
 
 #if RUBY_RELEASE_CODE == 20070924 /* bug workaround for 1.8.6-p111 */
         if (ss == s || ss[-1] != '0') goto out;
-        ss2 = ss;
+        p = ss;
         do {
-            ss2--;  
-        } while (*ss2 == '0' && ss2 > s);
-        if (*ss2 == '0' || *ss2 == '-' || *ss2 == '+' || ISSPACE(*ss2))
+            p--;  
+        } while (*p == '0' && p > s);
+        if (*p == '0' || *p == '-' || *p == '+' || ISSPACE(*p))
             *ss = '0';
         else
   out:    
