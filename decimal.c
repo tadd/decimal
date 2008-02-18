@@ -762,7 +762,7 @@ normal_divide(Decimal *x, Decimal *y, long scale, VALUE mode)
 	z->scale = diff;
     }
     z->inum = INUM_DIV(xx, y->inum);
-    return do_round(z, scale, mode, 0);
+    return do_round(z, scale, mode, NULL);
 }
 
 static int
@@ -1431,7 +1431,7 @@ rounding_method(int argc, VALUE *argv, VALUE x, VALUE mode)
 	do_round(d, 0, mode, &inum);
 	return inum;
     }
-    return WrapDecimal(do_round(d, NUM2LONG(scale), mode, 0));
+    return WrapDecimal(do_round(d, NUM2LONG(scale), mode, NULL));
 }
 
 static VALUE
@@ -1483,7 +1483,7 @@ dec_round(int argc, VALUE *argv, VALUE x)
 	do_round(d, scale, mode, &inum);
 	return inum;
     }
-    return WrapDecimal(do_round(d, scale, mode, 0));
+    return WrapDecimal(do_round(d, scale, mode, NULL));
 }
 
 
