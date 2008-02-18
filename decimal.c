@@ -922,9 +922,9 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	    mod = finite_dup(a);
 	}
 	else {
-	    tmp = normal_mul(div, b);
+	    tmp = normal_mul(div, b); /* XXX */
 	    mod = normal_plus(a, tmp, 0); /* mod = x - div*y; */
-	    xfree(tmp);
+	    xfree(tmp); /* XXX */
 	}
 	/* if ((mod < 0 && y > 0) || (mod > 0 && y < 0)) { */
 	if (INUM_NEGATIVE_P(mod->inum) != INUM_NEGATIVE_P(b->inum) &&
@@ -1531,7 +1531,6 @@ Init_decimal(void)
     rb_define_method(cDecimal, "initialize", dec_initialize, 1);
 
     /* Singleton objects, should not be freed */
-    /* FIXME: register objects to prevent GC */
     VALUE_PINF = Data_Wrap_Struct(cDecimal, NULL, NULL, DEC_PINF);
     VALUE_NINF = Data_Wrap_Struct(cDecimal, NULL, NULL, DEC_NINF);
     VALUE_NaN = Data_Wrap_Struct(cDecimal, NULL, NULL, DEC_NaN);
