@@ -21,7 +21,7 @@
 #include <util.h>
 
 /*
- * unfortunately, a few copies of Integer functions
+ * unfortunately, few copies of Integer functions
  * are needed from original Ruby
  */
 #include "inum18.h"

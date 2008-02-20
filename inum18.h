@@ -1,7 +1,7 @@
 /*
  * Ruby's Integer part from ruby_1_8, r15364.
  *
- * These are hand copies (with a few modification) taken from original
+ * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
  * held by matz and other contributors:
  *
@@ -249,7 +249,7 @@ fix_pow(VALUE x, VALUE y)
 	if (b == 1) return x;
 	if (a == 0) {
 	    if (b > 0) return INT2FIX(0);
-             /* modified */
+	    /* modified */
             rb_bug("fix_pow(): infinity returned");
 	    return Qnil;
 	}
