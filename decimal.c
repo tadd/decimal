@@ -1578,7 +1578,6 @@ Init_decimal(void)
     rb_define_method(cDecimal, "zero?", dec_zero_p, 0);
 
     rb_define_method(cDecimal, "to_i", dec_to_i, 0);
-    rb_define_method(cDecimal, "to_int", dec_to_i, 0);
     rb_define_method(cDecimal, "truncate",  dec_truncate, -1);
     rb_define_method(cDecimal, "floor", dec_floor, -1);
     rb_define_method(cDecimal, "ceil", dec_ceil, -1);
