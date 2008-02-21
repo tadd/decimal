@@ -14,6 +14,7 @@
  */
 
 #define BDIGITS(x) ((BDIGIT*)RBIGNUM(x)->digits)
+#define BIGZEROP(x) (RBIGNUM(x)->len == 0 || (RBIGNUM(x)->len == 1 && BDIGITS(x)[0] == 0))
 
 static VALUE
 rb_big_cmp(VALUE x, VALUE y)

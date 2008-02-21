@@ -56,7 +56,7 @@
 #define INUM_ZERO_P(n) (FIXNUM_P(n) && FIX2LONG(n) == 0)
 #define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : !RBIGNUM(n)->sign)
 #define INUM_BOTTOMDIG(n) (FIXNUM_P(n) ? FIX2LONG(n) % 10 : \
-  RBIGNUM(n)->len ? FIX2INT(RARRAY(rb_big_divmod(n, INT2FIX(10)))->ptr[1]) : 0)
+  !BIGZEROP(n) ? FIX2INT(RARRAY(rb_big_divmod(n, INT2FIX(10)))->ptr[1]) : 0)
 #define INUM_ODD_P(n) (FIXNUM_P(n) ? n & 2 : BDIGITS(n)[0] & 1)
 
 /* the body */
