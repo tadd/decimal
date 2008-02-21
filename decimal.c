@@ -1027,11 +1027,11 @@ power_with_fixnum(Decimal *x, VALUE y)
 {
     Decimal *d = ALLOC(Decimal);
     const int negative = (x->scale < 0) ? Qtrue : Qfalse;
-    long scale = negative ? -x->scale : x->scale;
+    long scale_abs = negative ? -x->scale : x->scale;
 
     d->inum = INUM_POW(x->inum, y);
-    scale *= FIX2LONG(y);
-    d->scale = negative ? -scale : scale;
+    scale_abs *= FIX2LONG(y);
+    d->scale = negative ? -scale_abs : scale_abs;
     return WrapDecimal(d);
 }
 
