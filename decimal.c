@@ -259,7 +259,7 @@ f_decimal(VALUE klass_unused, VALUE arg)
     return WrapDecimal(create_dec(arg));
 }
 
-/* TODO: should know about allocation framework */
+/* TODO: should know about allocation framework for dumping/loading */
 static VALUE
 dec_s_allocate(VALUE klass)
 {
@@ -273,7 +273,7 @@ dec_initialize(VALUE self, VALUE arg)
     Decimal *d = create_dec(arg);
 
     if (DEC_IMMEDIATE_P(d)) { /* no need to manage about memory */
-        RDATA(self)->dmark = RDATA(self)->dmark = NULL;
+        RDATA(self)->dmark = RDATA(self)->dfree = NULL;
     }
     DATA_PTR(self) = d;
     return self;
@@ -676,7 +676,7 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     negative = INUM_NEGATIVE_P(d->inum);
     diff = d->scale - scale;
     inumabs = negative ? INUM_UMINUS(d->inum) : d->inum;
-    if (mode == ROUND_CEILING ||
+    if (mode == ROUND_CEILING || /* don't need lower digit */
 	mode == ROUND_DOWN ||
 	mode == ROUND_FLOOR ||
 	mode == ROUND_UP ||
@@ -708,7 +708,6 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
             shift = inum_lshift(INT2FIX(1), diff-1);
             inumabs = INUM_DIV(inumabs, shift);
         }
-
 	ary = INUM_DIVMOD(inumabs, INT2FIX(10));
 	inum = RARRAY(ary)->ptr[0];
 	lower = FIX2INT(RARRAY(ary)->ptr[1]);
