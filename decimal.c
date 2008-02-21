@@ -40,6 +40,8 @@
     (FIXNUM_P(a) ? fix_div(a, b) : RARRAY(rb_big_divmod(a, b))->ptr[0])
 #define INUM_DIVMOD(a, b) \
     (FIXNUM_P(a) ? fix_divmod(a, b) : rb_big_divmod(a, b))
+#define INUM_POW(a, b) \
+    (FIXNUM_P(a) ? fix_pow(a, b) : rb_big_pow(a, b))
 #define INUM_EQ(a, b) \
     (FIXNUM_P(a) ? fix_equal(a, b) : rb_big_eq(a, b))
 #define INUM_CMP(a, b) \
@@ -191,7 +193,7 @@ cstr_to_dec(const char *str)
         if (*p == '0' || *p == '-' || *p == '+' || ISSPACE(*p))
             *ss = '0';
         else
-  out:    
+  out:
 #endif
 	*ss = '_'; /* so that rb_cstr_to_inum() can ignore '.' */
 	for (p = ss + 1; ISDIGIT(*p) || *p == '_'; p++) {
@@ -461,7 +463,7 @@ inum_lshift(VALUE x, long n)
     return INUM_MUL(x, y);
 }
 
-/* the "normal" number means "finite and nonzero." */
+/* the "normal" number means "finite and nonzero" */
 static Decimal *
 normal_plus(Decimal *x, Decimal *y, const int add)
 {
@@ -1020,28 +1022,17 @@ dec_divmod(VALUE x, VALUE y)
     return rb_assoc_new(div, mod);
 }
 
-/* XXX: may have bugs; try "GC.stress = true" to reproduce */
-/* TODO: can be optimized with removing sign "flip flap?" */
 static VALUE
-power_with_long(Decimal *x, long y) /* requires y > 1 */
+power_with_fixnum(Decimal *x, VALUE y)
 {
-    Decimal *z = x, *const orig_x = x, *tmp;
+    Decimal *d = ALLOC(Decimal);
+    const int negative = (x->scale < 0) ? Qtrue : Qfalse;
+    long scale = negative ? -x->scale : x->scale;
 
-    for (;;) {
-	y--;
-	if (y == 0) break;
-	while ((y & 1) == 0) {
-	    y >>= 1;
-	    x = normal_mul(x, x);
-	    if (!FIXNUM_P(x->inum)) rb_gc_mark(x->inum);
-	}
-        tmp = z;
-	z = normal_mul(z, x);
-	if (!FIXNUM_P(z->inum)) rb_gc_mark(z->inum);
-        if (tmp != orig_x)
-            xfree(tmp);
-    }
-    return WrapDecimal(z);
+    d->inum = INUM_POW(x->inum, y);
+    scale *= FIX2LONG(y);
+    d->scale = negative ? -scale : scale;
+    return WrapDecimal(d);
 }
 
 static VALUE
@@ -1069,7 +1060,7 @@ dec_pow(VALUE x, VALUE y)
 	}
 	return x;
     }
-    return power_with_long(a, l);
+    return power_with_fixnum(a, y);
 }
 
 static int
