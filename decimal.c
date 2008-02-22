@@ -1027,6 +1027,7 @@ power_with_fixnum(Decimal *x, VALUE y)
     Decimal *d;
     VALUE inum;
 
+    /* XXX: it's valid to rb_warn() out of here, rb_big_pow()? */ 
     inum = INUM_POW(x->inum, y);
     if (TYPE(inum) == T_FLOAT) /* got Infinity with warning, by too-big y */
         return VALUE_PINF;
