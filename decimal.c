@@ -243,7 +243,7 @@ create_dec(VALUE arg)
 	}
 	/* fall through */
       case T_FLOAT:
-	rb_raise(rb_eArgError, "invalid value Float(%s) for Decimal",
+	rb_raise(rb_eArgError, "invalid type Float: %s",
                  RSTRING(rb_inspect(arg))->ptr);
       default:
 	rb_raise(rb_eArgError, "invalid value for Decimal: %s",
