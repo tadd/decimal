@@ -1024,13 +1024,15 @@ dec_divmod(VALUE x, VALUE y)
 static VALUE
 power_with_fixnum(Decimal *x, VALUE y)
 {
-    Decimal *d = ALLOC(Decimal);
-    const int negative = (x->scale < 0) ? Qtrue : Qfalse;
-    long scale_abs = negative ? -x->scale : x->scale;
+    Decimal *d;
+    VALUE inum;
 
-    d->inum = INUM_POW(x->inum, y);
-    scale_abs *= FIX2LONG(y);
-    d->scale = negative ? -scale_abs : scale_abs;
+    inum = INUM_POW(x->inum, y);
+    if (TYPE(inum) == T_FLOAT) /* got Infinity with warning, by too-big y */
+        return VALUE_PINF;
+    d = ALLOC(Decimal);
+    d->inum = inum;
+    d->scale = x->scale * FIX2LONG(y);
     return WrapDecimal(d);
 }
 
