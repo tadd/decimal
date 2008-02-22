@@ -101,8 +101,8 @@ static VALUE ROUND_UNNECESSARY;
     Data_Get_Struct(obj, Decimal, d); \
     if (d == NULL) rb_raise(rb_eArgError, "uninitialized Decimal object"); \
 } while (0)
-#define WrapDecimal(d) \
-    Data_Wrap_Struct(cDecimal, dec_mark, dec_free, d)
+#define WrapDecimal(d) Data_Wrap_Struct(cDecimal, dec_mark, dec_free, d)
+#define WrapStatic(d) Data_Wrap_Struct(cDecimal, NULL, NULL, d)
 #define DECIMAL_P(d) (CLASS_OF(d) == cDecimal)
 
 static VALUE cDecimal;
@@ -912,7 +912,7 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	}
 	else {
 	    div->inum = a_negative ? NZERO : PZERO;
-	    mod = finite_dup(a);
+ 	    mod = finite_dup(a);
 	}
     }
     else {
@@ -1523,10 +1523,11 @@ Init_decimal(void)
     rb_define_alloc_func(cDecimal, dec_s_allocate);
     rb_define_method(cDecimal, "initialize", dec_initialize, 1);
 
-    /* Singleton objects, should not be freed */
-    VALUE_PINF = Data_Wrap_Struct(cDecimal, NULL, NULL, DEC_PINF);
-    VALUE_NINF = Data_Wrap_Struct(cDecimal, NULL, NULL, DEC_NINF);
-    VALUE_NaN = Data_Wrap_Struct(cDecimal, NULL, NULL, DEC_NaN);
+    /* static objects, should not be freed */
+    VALUE_PINF = WrapStatic(DEC_PINF);
+    VALUE_NINF = WrapStatic(DEC_NINF);
+    VALUE_NaN = WrapStatic(DEC_NaN);
+    /* and register them with GC */
     rb_global_variable(&VALUE_PINF);
     rb_global_variable(&VALUE_NINF);
     rb_global_variable(&VALUE_NaN);
