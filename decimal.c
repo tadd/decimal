@@ -1463,10 +1463,10 @@ dec_round(int argc, VALUE *argv, VALUE x)
 	}
 	/* fall through */
       case 1:
-        if (NIL_P(mode)) mode = ROUND_HALF_UP;
 	scale = NUM2LONG(vscale);
 	/* fall through */
       default:
+        if (NIL_P(mode)) mode = ROUND_HALF_UP;
 	break;
     }
     GetDecimal(x, d);
