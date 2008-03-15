@@ -1451,9 +1451,9 @@ dec_round(int argc, VALUE *argv, VALUE x)
     Decimal *d;
     VALUE vscale;
     long scale = 0;
-    VALUE mode = ROUND_HALF_UP, tmpmode;
+    VALUE mode;
 
-    rb_scan_args(argc, argv, "02", &vscale, &tmpmode);
+    rb_scan_args(argc, argv, "02", &vscale, &mode);
     switch (argc) {
       case 2:
 	Check_Type(mode, T_SYMBOL);
@@ -1461,9 +1461,9 @@ dec_round(int argc, VALUE *argv, VALUE x)
 	    rb_raise(rb_eArgError, "invalid rounding mode %s",
                      RSTRING(rb_inspect(mode))->ptr);
 	}
-        mode = tmpmode;
 	/* fall through */
       case 1:
+        if (NIL_P(mode)) mode = ROUND_HALF_UP;
 	scale = NUM2LONG(vscale);
 	/* fall through */
       default:
