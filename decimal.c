@@ -486,7 +486,7 @@ normal_plus(Decimal *x, Decimal *y, const int add)
 	min_inum = inum_lshift(min->inum, max->scale - min->scale);
 	if (add) inum = INUM_PLUS(min_inum, max->inum); /* ? + ? */
 	else if (max == x) inum = INUM_MINUS(max->inum, min_inum); /* x - y */
-	else inum = INUM_MINUS(min_inum, max->inum); /* y - x */
+	else inum = INUM_MINUS(min_inum, max->inum); /* x - y */
     }
     if (INUM_ZERO_P(inum)) inum = PZERO;
     z = ALLOC(Decimal);
@@ -1287,7 +1287,7 @@ dec_eql(VALUE x, VALUE y)
 	return Qfalse;
     if (a->inum == b->inum)
 	return Qtrue;
-    if (INUM_SPZERO_P(a->inum) || INUM_SPZERO_P(b->inum))
+    if (DEC_ZERO_P(a) || DEC_ZERO_P(b))
 	return Qfalse;
     if (INUM_EQ(a->inum, b->inum))
 	return Qtrue;
@@ -1508,6 +1508,27 @@ dec_infinite_p(VALUE num)
     if (d == DEC_NINF) return INT2FIX(-1);
     return Qnil;
 }
+
+/*
+ *  A +Decimal+ objects represent decimal numbers...
+ */
+/*
+ *  Bignum objects hold integers outside the range of
+ *  Fixnum. Bignum objects are created
+ *  automatically when integer calculations would otherwise overflow a
+ *  Fixnum. When a calculation involving
+ *  Bignum objects returns a result that will fit in a
+ *  Fixnum, the result is automatically converted.
+ *
+ *  For the purposes of the bitwise operations and <code>[]</code>, a
+ *  Bignum is treated as if it were an infinite-length
+ *  bitstring with 2's complement representation.
+ *
+ *  While Fixnum values are immediate, Bignum
+ *  objects are not---assignment and parameter passing work with
+ *  references to objects, not the objects themselves.
+ *
+ */
 
 void
 Init_decimal(void)

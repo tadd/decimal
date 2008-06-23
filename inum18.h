@@ -1,5 +1,5 @@
 /*
- * Ruby's Integer part from ruby_1_8, r15575.
+ * Ruby's Integer part from ruby_1_8, r16008.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
@@ -142,6 +142,10 @@ static VALUE
 fix_mul(VALUE x, VALUE y)
 {
     if (FIXNUM_P(y)) {
+#ifdef __HP_cc
+        /* avoids an optimization bug of HP aC++/ANSI C B3910B A.06.05 [Jul 25 2005] */
+        volatile
+#endif
 	long a, b, c;
 	VALUE r;
 
