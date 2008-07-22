@@ -299,7 +299,6 @@ dec_unscaled_value(VALUE self)
     if (DEC_IMMEDIATE_P(d)) return Qnil;
     return DEC_ZERO_P(d) ? INT2FIX(0) : d->inum;
 }
-#endif
 
 static VALUE
 dec_strip_trailing_zeros(VALUE self)
@@ -325,6 +324,7 @@ dec_strip_trailing_zeros(VALUE self)
     }
     return WrapDecimal(d2);
 }
+#endif
 
 /* FIXME: should return "%g" format string */
 static VALUE
@@ -994,6 +994,21 @@ dec_mod(VALUE x, VALUE y)
     return mod;
 }
 
+/*
+ *  call-seq:
+ *     dec.divmod(other)   => array
+ *
+ *  Returns an array containing the quotient and modulus obtained by
+ *  dividing _dec_ by _other_.
+ *
+ *     Decimal(11).divmod(3)                    #=> [Decimal(3), Decimal(2)]
+ *     Decimal(11).divmod(-3)	                #=> [Decimal(-4), Decimal(-1)]
+ *     Decimal(11).divmod(Decimal("3.5"))       #=> [Decimal(3), Decimal(0.5)]
+ *     Decimal(-11).divmod(Decimal("3.5"))      #=> [Decimal(-4), Decimal(3.0)]
+ *     Decimal("11.5").divmod(Decimal("3.5"))   #=> [Decimal(3), Decimal(1.0)]   
+ *
+ *  See +Numeric#divmod+ for more details.
+ */
 static VALUE
 dec_divmod(VALUE x, VALUE y)
 {
@@ -1037,6 +1052,12 @@ power_with_fixnum(Decimal *x, VALUE y)
     return WrapDecimal(d);
 }
 
+/*
+ *  call-seq:
+ *     dec ** fix   => decimal
+ *
+ *  Raises _dec_ the _fix_ power.
+ */
 static VALUE
 dec_pow(VALUE x, VALUE y)
 {
@@ -1103,6 +1124,17 @@ cmp(Decimal *x, Decimal *y)
     return normal_cmp(x, y);    
 }
 
+/*
+ *  call-seq:
+ *     dec == other   => true or false
+ *
+ *  Returns +true+ only if _other_ has the same value as _dec_.
+ *  Contrast this with +Decimal#eql?+, which requires _other_
+ *  to be the same class, a +Decimal+.
+ *
+ *     Decimal(1) == 1                #=> true
+ *     Decimal(1) == Decimal("1.0")   #=> true
+ */
 static VALUE
 dec_eq(VALUE x, VALUE y)
 {
@@ -1130,6 +1162,14 @@ dec_eq(VALUE x, VALUE y)
     return cmp(a, b) == 0 ? Qtrue : Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec <=> other   => -1, 0, +1
+ *
+ *  Returns -1, 0, or +1 depending on whether _dec_ is less than,
+ *  equal to, or greater than _other_. This is the basis for the
+ *  tests in +Comparable+.
+ */
 static VALUE
 dec_cmp(VALUE x, VALUE y)
 {
@@ -1157,6 +1197,12 @@ dec_cmp(VALUE x, VALUE y)
     return INT2FIX(cmp(a, b));
 }
 
+/*
+ *  call-seq:
+ *     dec > other   => true or false
+ *
+ *  Returns +true+ if _dec_ is greater than +other+.
+ */
 static VALUE
 dec_gt(VALUE x, VALUE y)
 {
@@ -1185,6 +1231,12 @@ dec_gt(VALUE x, VALUE y)
     return cmp(a, b) > 0 ? Qtrue : Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec >= other   => true or false
+ *
+ *  Returns +true+ if _dec_ is greater than or equal to +other+.
+ */
 static VALUE
 dec_ge(VALUE x, VALUE y)
 {
@@ -1213,6 +1265,12 @@ dec_ge(VALUE x, VALUE y)
     return cmp(a, b) >= 0 ? Qtrue : Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec < other   => true or false
+ *
+ *  Returns +true+ if _dec_ is less than +other+.
+ */
 static VALUE
 dec_lt(VALUE x, VALUE y)
 {
@@ -1241,6 +1299,12 @@ dec_lt(VALUE x, VALUE y)
     return cmp(a, b) < 0 ? Qtrue : Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec <= other   => true or false
+ *
+ *  Returns +true+ if _dec_ is less than or equal to +other+.
+ */
 static VALUE
 dec_le(VALUE x, VALUE y)
 {
@@ -1269,6 +1333,18 @@ dec_le(VALUE x, VALUE y)
     return cmp(a, b) <= 0 ? Qtrue : Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec.eql?(other)   => true or false
+ *
+ *  Returns +true+ if _other_ is a +Decimal+ and is equal to _dec_,
+ *  including their values of scale.
+ *
+ *     Decimal(1) == 1                    #=> true
+ *     Decimal(1).eql?(1)                 #=> false
+ *     Decimal(1).eql?(Decimal(1))        #=> true
+ *     Decimal(1).eql?(Decimal("1.0")))   #=> false
+ */
 static VALUE
 dec_eql(VALUE x, VALUE y)
 {
@@ -1294,6 +1370,12 @@ dec_eql(VALUE x, VALUE y)
     return Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec.hash   => integer
+ *
+ *   Returns a hash code for _dec_.
+ */
 static VALUE
 dec_hash(VALUE x)
 {
@@ -1348,6 +1430,13 @@ normal_to_f(Decimal *d)
     return f;
 }
 
+/*
+ *  call-seq:
+ *     dec.to_f => float
+ *
+ *  Converts _dec_ to a +Float+.  Note that this may lose some precision
+ *  and/or exactness.
+ */
 static VALUE
 dec_to_f(VALUE num)
 {
@@ -1371,6 +1460,15 @@ dec_to_f(VALUE num)
     return rb_float_new(f);
 }
 
+/*
+ *  call-seq:
+ *     dec.abs   => decimal
+ *
+ *  Returns the absolute value of _dec_.
+ *
+ *     Decimal("34.56").abs    #=> 34.56
+ *     Decimal("-34.56").abs   #=> 34.56
+ */
 static VALUE
 dec_abs(VALUE num)
 {
@@ -1389,6 +1487,12 @@ dec_abs(VALUE num)
     return WrapDecimal(d2);
 }
 
+/*
+ *  call-seq:
+ *     dec.zero?   => true or false
+ *
+ *  Returns +true+ if _dec_ is 0.
+ */
 static VALUE
 dec_zero_p(VALUE num)
 {
@@ -1401,6 +1505,12 @@ dec_zero_p(VALUE num)
     return Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec.to_i   => integer
+ *
+ *  Returns _dec_ truncated to an +Integer+.
+ */
 static VALUE
 dec_to_i(VALUE num)
 {
@@ -1427,18 +1537,46 @@ rounding_method(int argc, VALUE *argv, VALUE x, VALUE mode)
     return WrapDecimal(do_round(d, NUM2LONG(scale), mode, NULL));
 }
 
+/*
+ *  call-seq:
+ *     dec.truncate   => integer
+ *
+ *  Returns _dec_ truncated to an +Integer+.
+ */
 static VALUE
 dec_truncate(int argc, VALUE *argv, VALUE x)
 {
     return rounding_method(argc, argv, x, ROUND_DOWN);
 }
 
+/*
+ *  call-seq:
+ *     dec.floor   => integer
+ *
+ *  Returns the largest integer less than or equal to _dec_.
+ *
+ *     Decimal("1.2").floor    #=> 1
+ *     Decimal("2.0").floor    #=> 2
+ *     Decimal("-1.2").floor   #=> -2
+ *     Decimal("-2.0").floor   #=> -2
+ */
 static VALUE
 dec_floor(int argc, VALUE *argv, VALUE x)
 {
     return rounding_method(argc, argv, x, ROUND_FLOOR);
 }
 
+/*
+ *  call-seq:
+ *     dec.ceil   => integer
+ *
+ *  Returns the smallest +Integer+ greater than or equal to _dec_.
+ *
+ *     Decimal("1.2").ceil    #=> 2
+ *     Decimal("2.0").ceil    #=> 2
+ *     Decimal("-1.2").ceil   #=> -1
+ *     Decimal("-2.0").ceil   #=> -2
+ */
 static VALUE
 dec_ceil(int argc, VALUE *argv, VALUE x)
 {
@@ -1480,6 +1618,16 @@ dec_round(int argc, VALUE *argv, VALUE x)
 }
 
 
+/*
+ *  call-seq:
+ *     dec.nan?   => true or false
+ *
+ *  Returns +true+ if _dec_ is an invalid point number, NaN.
+ *
+ *     Decimal(-1).nan?            #=> false
+ *     Decimal(1).divide(0).nan?   #=> false
+ *     Decimal(0).divide(0).nan?   #=> true
+ */
 static VALUE
 dec_nan_p(VALUE num)
 {
@@ -1489,6 +1637,17 @@ dec_nan_p(VALUE num)
     return d == DEC_NaN ? Qtrue : Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec.finite?   => true or false
+ *
+ *  Returns +true+ if _dec_ is a finite number (it is not infinite,
+ *  and +nan?+ is +false+).
+ *
+ *     Decimal(0).finite?             #=> true
+ *     Decimal(1).divide(0).finite?   #=> false
+ *     Decimal(0).divide(0).finite?   #=> false
+ */
 static VALUE
 dec_finite_p(VALUE num)
 {
@@ -1498,6 +1657,17 @@ dec_finite_p(VALUE num)
     return !DEC_IMMEDIATE_P(d) ? Qtrue : Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec.infinite?   => nil, -1, +1
+ *
+ *  Returns +nil+, -1, or +1 depending on whether _dec_ is finite,
+ *  -infinity, or +infinity.
+ *
+ *     Decimal(0).infinite?              #=> nil
+ *     Decimal(-1).divide(0).infinite?   #=> -1
+ *     Decimal(+1).divide(0).infinite?   #=> 1
+ */
 static VALUE
 dec_infinite_p(VALUE num)
 {
@@ -1509,6 +1679,11 @@ dec_infinite_p(VALUE num)
     return Qnil;
 }
 
+/*
+ * +Decimal+ is a decimal fraction that holds exact number in the decimal
+ * system unlike +Float+.  It can hold multi-precision digits, so you can
+ * calculate any detailed number as you likes.
+ */
 void
 Init_decimal(void)
 {
@@ -1548,10 +1723,10 @@ Init_decimal(void)
 #ifdef DEBUG
     rb_define_method(cDecimal, "scale", dec_scale, 0);
     rb_define_method(cDecimal, "unscaled_value", dec_unscaled_value, 0);
-#endif
     rb_define_method(cDecimal, "strip_trailing_zeros",
 		     dec_strip_trailing_zeros, 0);
     rb_define_method(cDecimal, "strip", dec_strip_trailing_zeros, 0);
+#endif
     
     rb_define_method(cDecimal, "to_s", dec_to_s, 0);
     rb_define_method(cDecimal, "inspect", dec_inspect, 0);
