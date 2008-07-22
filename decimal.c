@@ -1086,7 +1086,7 @@ normal_cmp(Decimal *x, Decimal *y)
     return FIX2INT(INUM_CMP(n, max->inum));
 }
 
-/* never accepts NaN for x and y */
+/* never accepts NaN for x or y */
 static int
 cmp(Decimal *x, Decimal *y)
 {
