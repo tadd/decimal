@@ -654,8 +654,8 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     if (d == DEC_NaN) rb_raise(eDomainError, "NaN");
     if (INUM_SPZERO_P(d->inum)) {
 	if (inump) {
-	    if (scale != 0) rb_bug("do_round(): "
-                                   "scale != 0 with Integer request");
+	    if (scale > 0) rb_bug("do_round(): "
+                                   "scale > 0 with Integer request");
 	    *inump = INT2FIX(0);
 	    return NULL;
 	}
@@ -664,11 +664,11 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
 	return d2;
     }
     if (d->scale <= scale) { /* no need to round */
-	/* return Decimal */
-	if (scale) return finite_dup(d);
+	if (scale) return finite_dup(d); /* return Decimal */
 	/* return Integer */
 	if (!inump) /* XXX: may be reached when Decimal(1)/1  */
-            rb_bug("do_round(): not reached[2]"); 
+            rb_bug("do_round(): not reached[2]");
+	/* FIXME: scaling policy, no need to grow scale? */
 	if (d->scale == 0) *inump = d->inum;
 	else *inump = inum_lshift(d->inum, -d->scale);
 	return NULL;
@@ -728,7 +728,8 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     }
   coda:
     if (negative) inum = INUM_UMINUS(inum);
-    if (scale == 0 && inump) { /* return Integer */
+    if (scale <= 0 && inump) { /* return Integer */
+	if (scale < 0) inum = inum_lshift(inum, -scale);
 	*inump = inum;
 	return NULL;
     }
@@ -788,7 +789,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
     VALUE y;
     Decimal *a, *b;
     VALUE mode = ROUND_UNNECESSARY;
-    long scale, l;
+    long l, scale = 0; /* FIXME: dummy 0 */
     VALUE vscale, vmode;
 
     GetDecimal(x, a);
@@ -811,7 +812,6 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	if (mode != ROUND_UNNECESSARY) {
 	    rb_raise(rb_eArgError, "scale number argument needed");
 	}
-	scale = 0; /* FIXME: dummy */
     }
 
     switch (TYPE(y)) {
@@ -1491,7 +1491,7 @@ dec_abs(VALUE num)
  *  call-seq:
  *     dec.zero?   => true or false
  *
- *  Returns +true+ if _dec_ is 0.
+ *  Returns +true+ if _dec_ is zero.
  */
 static VALUE
 dec_zero_p(VALUE num)
@@ -1526,20 +1526,22 @@ static VALUE
 rounding_method(int argc, VALUE *argv, VALUE x, VALUE mode)
 {
     Decimal *d;
-    VALUE scale, inum;
+    VALUE vscale, inum;
+    long scale = 0;
 
-    rb_scan_args(argc, argv, "01", &scale);
+    rb_scan_args(argc, argv, "01", &vscale);
     GetDecimal(x, d);
-    if (argc == 0) {
-	do_round(d, 0, mode, &inum);
+    if (argc == 1) scale = NUM2LONG(vscale);
+    if (scale <= 0) {
+	do_round(d, scale, mode, &inum);
 	return inum;
     }
-    return WrapDecimal(do_round(d, NUM2LONG(scale), mode, NULL));
+    return WrapDecimal(do_round(d, scale, mode, NULL));
 }
 
 /*
  *  call-seq:
- *     dec.truncate   => integer
+ *     dec.truncate(n=0)   => integer or decimal
  *
  *  Returns _dec_ truncated to an +Integer+.
  */
@@ -1551,7 +1553,7 @@ dec_truncate(int argc, VALUE *argv, VALUE x)
 
 /*
  *  call-seq:
- *     dec.floor   => integer
+ *     dec.floor(n=0)   => integer or decimal
  *
  *  Returns the largest integer less than or equal to _dec_.
  *
@@ -1568,7 +1570,7 @@ dec_floor(int argc, VALUE *argv, VALUE x)
 
 /*
  *  call-seq:
- *     dec.ceil   => integer
+ *     dec.ceil(n=0)   => integer or decimal
  *
  *  Returns the smallest +Integer+ greater than or equal to _dec_.
  *
@@ -1583,13 +1585,22 @@ dec_ceil(int argc, VALUE *argv, VALUE x)
     return rounding_method(argc, argv, x, ROUND_CEILING);
 }
 
+/*
+ *  call-seq:
+ *     dec.round(n=0, mode=Decimal::ROUND_HALF_UP)   => integer or decimal
+ *
+ *  Rounds _dec_ to a given precision in decimal digits (default 0 digits).
+ *  Precision may be negative.  Returns a +Decimal+ when _n_ is more than one.
+ *
+ *     Decimal("1.5").round    #=> 2
+ *     Decimal("-1.5").round   #=> -2
+ */
 static VALUE
 dec_round(int argc, VALUE *argv, VALUE x)
 {
     Decimal *d;
-    VALUE vscale;
+    VALUE vscale, mode;
     long scale = 0;
-    VALUE mode;
 
     rb_scan_args(argc, argv, "02", &vscale, &mode);
     switch (argc) {
@@ -1608,7 +1619,7 @@ dec_round(int argc, VALUE *argv, VALUE x)
 	break;
     }
     GetDecimal(x, d);
-    if (scale == 0) {
+    if (scale <= 0) {
 	VALUE inum;
 
 	do_round(d, scale, mode, &inum);
