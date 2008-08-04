@@ -1436,6 +1436,7 @@ normal_to_f(Decimal *d)
  *
  *  Converts _dec_ to a +Float+.  Note that this may lose some precision
  *  and/or exactness.
+ *  If you want to operate +Decimal+ with +Float+, use this method explicitly.
  */
 static VALUE
 dec_to_f(VALUE num)
