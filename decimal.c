@@ -71,7 +71,7 @@ typedef struct {
 static Decimal *const DEC_NaN = (Decimal *)1;
 static Decimal *const DEC_PINF = (Decimal *)3;
 static Decimal *const DEC_NINF = (Decimal *)7;
-/* and their representation as Ruby object */
+/* and their representation as Ruby objects */
 static VALUE VALUE_NaN, VALUE_PINF, VALUE_NINF;
 
 /* special constants - i.e. non-zero and non-fixnum */
