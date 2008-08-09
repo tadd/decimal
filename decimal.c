@@ -109,7 +109,7 @@ static VALUE cDecimal;
 static VALUE eDomainError;
 static VALUE eArithmeticError;
 
-/* mark if d->inum is Bignum */
+/* mark if d->inum is a Bignum */
 static void
 dec_mark(void *p)
 {
