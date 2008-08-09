@@ -232,16 +232,6 @@ create_dec(VALUE arg)
 	return inum_to_dec(arg);
       case T_STRING:
 	return cstr_to_dec(StringValueCStr(arg));
-      case T_DATA:
-	if (DECIMAL_P(arg)) {
-	    Decimal *d;
-
-	    GetDecimal(arg, d);
-	    if (DEC_IMMEDIATE_P(d))
-		return d;
-	    return finite_dup(d);
-	}
-	/* fall through */
       case T_FLOAT:
 	rb_raise(rb_eArgError, "invalid type Float: %s",
                  RSTRING(rb_inspect(arg))->ptr);
@@ -263,8 +253,13 @@ dec_s_allocate(VALUE klass)
 static VALUE
 dec_initialize(VALUE self, VALUE arg)
 {
-    Decimal *d = create_dec(arg);
+    Decimal *d;
 
+    if (DECIMAL_P(arg)) {
+	rb_gc_force_recycle(self); /* never use proto-object */
+	return arg;
+    }
+    d = create_dec(arg);
     if (DEC_IMMEDIATE_P(d)) { /* no need to manage about memory */
         RDATA(self)->dmark = RDATA(self)->dfree = NULL;
     }
