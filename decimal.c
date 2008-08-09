@@ -252,13 +252,6 @@ create_dec(VALUE arg)
     return NULL; /* not reached */
 }
 
-static VALUE
-f_decimal(VALUE klass_unused, VALUE arg)
-{
-    if (DECIMAL_P(arg)) return arg;
-    return WrapDecimal(create_dec(arg));
-}
-
 /* TODO: should know about allocation framework for dumping/loading */
 static VALUE
 dec_s_allocate(VALUE klass)
@@ -277,6 +270,12 @@ dec_initialize(VALUE self, VALUE arg)
     }
     DATA_PTR(self) = d;
     return self;
+}
+
+static VALUE
+f_decimal(VALUE klass_unused, VALUE arg)
+{
+    return dec_initialize(dec_s_allocate(cDecimal), arg);
 }
 
 #ifdef DEBUG
