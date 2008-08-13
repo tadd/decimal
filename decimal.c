@@ -1539,6 +1539,9 @@ rounding_method(int argc, VALUE *argv, VALUE x, VALUE mode)
  *     dec.truncate(n=0)   => integer or decimal
  *
  *  Returns _dec_ truncated to an +Integer+.
+ *
+ *  This is identical to +dec.round(n, Decimal::ROUND_DOWN)+.
+ *  See +Decimal#round+ for more details.
  */
 static VALUE
 dec_truncate(int argc, VALUE *argv, VALUE x)
@@ -1556,6 +1559,9 @@ dec_truncate(int argc, VALUE *argv, VALUE x)
  *     Decimal("2.0").floor    #=> 2
  *     Decimal("-1.2").floor   #=> -2
  *     Decimal("-2.0").floor   #=> -2
+ *
+ *  This is identical to +dec.round(n, Decimal::ROUND_FLOOR)+.
+ *  See +Decimal#round+ for more details.
  */
 static VALUE
 dec_floor(int argc, VALUE *argv, VALUE x)
@@ -1573,6 +1579,9 @@ dec_floor(int argc, VALUE *argv, VALUE x)
  *     Decimal("2.0").ceil    #=> 2
  *     Decimal("-1.2").ceil   #=> -1
  *     Decimal("-2.0").ceil   #=> -2
+ *
+ *  This is identical to +dec.round(n, Decimal::ROUND_CEILING)+.
+ *  See +Decimal#round+ for more details.
  */
 static VALUE
 dec_ceil(int argc, VALUE *argv, VALUE x)
