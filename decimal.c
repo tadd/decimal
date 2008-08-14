@@ -260,7 +260,6 @@ dec_initialize(VALUE self, VALUE arg)
     return self;
 }
 
-/* FIXME: send :allocate & :initalize for overriding */
 static VALUE
 f_decimal(VALUE klass_unused, VALUE arg)
 {
