@@ -962,8 +962,8 @@ dec_idiv(VALUE x, VALUE y)
  *
  *  Return the modulo after division of _dec_ by _other_.
  *
- *     Decimal("6543.21").modulo(137)                 #=> 104.21
- *     Decimal("6543.21").modulo(Decimal("137.24"))   #=> 92.9299999999996
+ *     Decimal("6543.21").modulo(137)                 #=> Decimal(104.21)
+ *     Decimal("6543.21").modulo(Decimal("137.24"))   #=> Decimal(92.9299999999996)
  */
 static VALUE
 dec_mod(VALUE x, VALUE y)
@@ -1465,8 +1465,8 @@ dec_to_f(VALUE num)
  *
  *  Returns the absolute value of _dec_.
  *
- *     Decimal("34.56").abs    #=> 34.56
- *     Decimal("-34.56").abs   #=> 34.56
+ *     Decimal("34.56").abs    #=> Decimal(34.56)
+ *     Decimal("-34.56").abs   #=> Decimal(34.56)
  */
 static VALUE
 dec_abs(VALUE num)
