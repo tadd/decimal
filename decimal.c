@@ -249,24 +249,18 @@ dec_s_allocate(VALUE klass)
     return Data_Wrap_Struct(klass, dec_mark, dec_free, NULL);
 }
 
-/* TODO: check whether arg is a Decimal or not */
 static VALUE
 dec_initialize(VALUE self, VALUE arg)
 {
-    Decimal *d;
-
     if (DECIMAL_P(arg)) {
 	rb_gc_force_recycle(self); /* never use proto-object */
 	return arg;
     }
-    d = create_dec(arg);
-    if (DEC_IMMEDIATE_P(d)) { /* no need to manage about memory */
-        RDATA(self)->dmark = RDATA(self)->dfree = NULL;
-    }
-    DATA_PTR(self) = d;
+    DATA_PTR(self) = create_dec(arg);
     return self;
 }
 
+/* FIXME: send :allocate & :initalize for overriding */
 static VALUE
 f_decimal(VALUE klass_unused, VALUE arg)
 {
