@@ -372,6 +372,7 @@ dec_to_s(VALUE self)
     if (d == DEC_NaN) return rb_str_new2("NaN");
     if (d == DEC_PINF) return rb_str_new2("Infinity");
     if (d == DEC_NINF) return rb_str_new2("-Infinity");
+    /* FIXME: use the d->scale */
     if (d->inum == PZERO) return rb_str_new2("0");
     if (d->inum == NZERO) return rb_str_new2("-0");
     return finite_to_s(d);
@@ -954,6 +955,16 @@ dec_idiv(VALUE x, VALUE y)
     return div;
 }
 
+/*
+ *  call-seq:
+ *     dec % other         => decimal
+ *     dec.modulo(other)   => decimal
+ *
+ *  Return the modulo after division of _dec_ by _other_.
+ *
+ *     Decimal("6543.21").modulo(137)                 #=> 104.21
+ *     Decimal("6543.21").modulo(Decimal("137.24"))   #=> 92.9299999999996
+ */
 static VALUE
 dec_mod(VALUE x, VALUE y)
 {
