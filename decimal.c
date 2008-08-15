@@ -253,13 +253,20 @@ static VALUE
 dec_initialize(VALUE self, VALUE arg)
 {
     if (DECIMAL_P(arg)) {
-	rb_gc_force_recycle(self); /* never use proto-object */
+	rb_gc_force_recycle(self); /* never use empty object */
 	return arg;
     }
     DATA_PTR(self) = create_dec(arg);
     return self;
 }
 
+/*
+ *  call-seq:
+ *     Decimal(arg)   => decimal
+ *  
+ *  Identical to +Decimal.new(arg)+, except that this method never be
+ *  affected from overriding of Decimal#initialize.
+ */
 static VALUE
 f_decimal(VALUE klass_unused, VALUE arg)
 {
@@ -363,6 +370,18 @@ finite_to_s(Decimal *d)
     return newstr;
 }
 
+/*
+ *  call-seq:
+ *     dec.to_s   => string
+ *
+ *  WARNING: The behavior of this method may change.
+ *
+ *  Returns a string containing a simple representation of self.
+ *
+ *     Decimal(1).to_s             #=> "1"
+ *     Decimal("1.1").to_s         #=> "1.1"
+ *     Decimal(1).divide(0).to_s   #=> "Infinity"
+ */
 static VALUE
 dec_to_s(VALUE self)
 {
@@ -378,6 +397,16 @@ dec_to_s(VALUE self)
     return finite_to_s(d);
 }
 
+/*
+ *  call-seq:
+ *     dec.inspect   => string
+ *
+ *  Returns a easy-to-distinguish string: +"Decimal(#{dec})"+.
+ *
+ *     Decimal(1).inspect             #=> "Decimal(1)"
+ *     Decimal("1.1").inspect         #=> "Decimal(1.1)"
+ *     Decimal(1).divide(0).inspect   #=> "Decimal(Infinity)"
+ */
 static VALUE
 dec_inspect(VALUE self)
 {
@@ -394,6 +423,18 @@ dec_inspect(VALUE self)
     return newstr;
 }
 
+/*
+ *  call-seq:
+ *     dec.coerce(other)   => array
+ *
+ *  Returns array +[Decimal(other), dec]+ if _other_ has a compatible
+ *  type, +Integer+ or +Decimal+.
+ *  Otherwise raises a +TypeError+.
+ *
+ *     Decimal(1).coerce(2)            #=> [Decimal(2), Decimal(1)]
+ *     Decimal(1).coerce(Decimal(2))   #=> [Decimal(2), Decimal(1)]
+ *     Decimal(1).coerce(2.5)          #=> (TypeError)
+ */
 static VALUE
 dec_coerce(VALUE x, VALUE y)
 {
@@ -419,6 +460,12 @@ dec_coerce(VALUE x, VALUE y)
     return Qnil; /* not reached */
 }
 
+/*
+ * call-seq:
+ *    -dec   => decimal
+ *
+ * Returns a negated value of _dec_.
+ */
 static VALUE
 dec_uminus(VALUE num)
 {
@@ -483,6 +530,12 @@ normal_plus(Decimal *x, Decimal *y, const int add)
     return z;
 }
 
+/*
+ *  call-seq:
+ *    dec + other   => decimal
+ *
+ *  Returns a new decimal which is the sum of _dec_ and _other_.
+ */
 static VALUE
 dec_plus(VALUE x, VALUE y)
 {
@@ -528,6 +581,12 @@ dec_plus(VALUE x, VALUE y)
     return WrapDecimal(normal_plus(a, b, Qtrue));
 }
 
+/*
+ *  call-seq:
+ *    dec - other   => decimal
+ *
+ *  Returns a new float which is the difference of _dec_ and _other_.
+ */
 static VALUE
 dec_minus(VALUE x, VALUE y)
 {
@@ -580,6 +639,12 @@ normal_mul(Decimal *x, Decimal *y)
     return z;
 }
 
+/*
+ *  call-seq:
+ *    dec * other   => decimal
+ *
+ *  Returns a new decimal which is the product of _dec_ and _other_.
+ */
 static VALUE
 dec_mul(VALUE x, VALUE y)
 {
@@ -771,6 +836,14 @@ valid_rounding_mode(VALUE sym)
     return Qfalse;
 }
 
+/*
+ *  call-seq:
+ *     dec.divide(other, scale=0, mode=Decimal::ROUND_UNNECESSARY)   #=> decimal or integer
+ *
+ *  WARNING: The behavior of this method may change.
+ * 
+ *  Returns a new decimal which is the result of dividing _dec_ by _other_.
+ */
 static VALUE
 dec_divide(int argc, VALUE *argv, VALUE x)
 {
