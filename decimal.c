@@ -304,7 +304,7 @@ f_decimal(VALUE klass_unused, VALUE arg)
 }
 
 #ifdef DEBUG
-/* :nodoc */
+/* :nodoc: */
 static VALUE
 dec_scale(VALUE self)
 {
@@ -315,7 +315,7 @@ dec_scale(VALUE self)
     return LONG2NUM(d->scale);
 }
 
-/* :nodoc */
+/* :nodoc: */
 static VALUE
 dec_unscaled_value(VALUE self)
 {
@@ -326,7 +326,7 @@ dec_unscaled_value(VALUE self)
     return DEC_ZERO_P(d) ? INT2FIX(0) : d->inum;
 }
 
-/* :nodoc */
+/* :nodoc: */
 static VALUE
 dec_strip_trailing_zeros(VALUE self)
 {
@@ -407,7 +407,7 @@ finite_to_s(Decimal *d)
  *  call-seq:
  *     dec.to_s   => string
  *
- *  WARNING: The behavior of this method may change.
+ *  *WARNING*: The behavior of this method may change.
  *
  *  Returns a string containing a simple representation of self.
  *
@@ -873,7 +873,7 @@ valid_rounding_mode(VALUE sym)
  *  call-seq:
  *     dec.divide(other, scale=0, mode=Decimal::ROUND_UNNECESSARY)   #=> decimal or integer
  *
- *  WARNING: The behavior of this method may change.
+ *  *WARNING*: The behavior of this method may change.
  * 
  *  Returns a new decimal which is the result of dividing _dec_ by _other_.
  */
@@ -964,7 +964,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 }
 
 #ifdef DEBUG
-/* :nodoc */
+/* :nodoc: */
 static VALUE
 dec_div(VALUE x, VALUE y)
 {
@@ -1035,7 +1035,7 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
     else if (!DEC_IMMEDIATE_P(mod)) xfree(mod);
 }
 
-/* :nodoc */
+/* :nodoc: */
 static VALUE
 dec_idiv(VALUE x, VALUE y)
 {
