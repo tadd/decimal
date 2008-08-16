@@ -254,13 +254,13 @@ dec_s_allocate(VALUE klass)
  *     Decimal.new(arg)   => decimal
  *
  *  Returns a new decimal made from _arg_.  The _arg_ must be an +Integer+
- *  or a +String+.  An acceptable format of +String+ is equal to +Float()+'s
- *  one.  In a +Regexp+, it might be:
+ *  or a +String+.  An acceptable format of +String+ is equal to
+ *  <code>Kernel.Float()</code>'s one.  In a +Regexp+, it might be:
  * 
- *     _decimal_ = +/\A\s*#{body}\s*\z/+
- *     _body_    = +/#{number}(\.#{number})?([eE]#{number})?/+
- *     _number_  = +/(\+-)?#{digits}/+
- *     _digits_  = +/(\d+_)*\d+/+
+ *     decimal = /\A\s*#{body}\s*\z/
+ *     body    = /#{number}(\.#{number})?([eE]#{number})?/
+ *     number  = /(\+-)?#{digits}/
+ *     digits  = /(\d+_)*\d+/
  *
  *  And samples are here:
  *
@@ -428,7 +428,7 @@ dec_to_s(VALUE self)
  *  call-seq:
  *     dec.inspect   => string
  *
- *  Returns a easy-to-distinguish string: +"Decimal(#{dec})"+.
+ *  Returns a easy-to-distinguish string: <code>"Decimal(#{dec})"</code>.
  *
  *     Decimal(1).inspect             #=> "Decimal(1)"
  *     Decimal("1.1").inspect         #=> "Decimal(1.1)"
@@ -454,8 +454,8 @@ dec_inspect(VALUE self)
  *  call-seq:
  *     dec.coerce(other)   => array
  *
- *  Returns array +[Decimal(other), dec]+ if _other_ has a compatible
- *  type, +Integer+ or +Decimal+.
+ *  Returns array <code>[Decimal(other), dec]</code> if _other_ has a
+ *  compatible type, +Integer+ or +Decimal+.
  *  Otherwise raises a +TypeError+.
  *
  *     Decimal(1).coerce(2)            #=> [Decimal(2), Decimal(1)]
@@ -1105,7 +1105,7 @@ dec_mod(VALUE x, VALUE y)
  *     Decimal(-11).divmod(Decimal("3.5"))      #=> [Decimal(-4), Decimal(3.0)]
  *     Decimal("11.5").divmod(Decimal("3.5"))   #=> [Decimal(3), Decimal(1.0)]   
  *
- *  See +Numeric#divmod+ for more details.
+ *  See Numeric#divmod for more details.
  */
 static VALUE
 dec_divmod(VALUE x, VALUE y)
@@ -1219,7 +1219,7 @@ cmp(Decimal *x, Decimal *y)
     if (INUM_SPZERO_P(y->inum)) {
 	return INUM_NEGATIVE_P(x->inum) ? -1 : 1;
     }
-    return normal_cmp(x, y);    
+    return normal_cmp(x, y);
 }
 
 /*
@@ -1227,7 +1227,7 @@ cmp(Decimal *x, Decimal *y)
  *     dec == other   => true or false
  *
  *  Returns +true+ only if _other_ has the same value as _dec_.
- *  Contrast this with +Decimal#eql?+, which requires _other_
+ *  Contrast this with eql?, which requires _other_
  *  to be the same class, a +Decimal+.
  *
  *     Decimal(1) == 1                #=> true
@@ -1644,8 +1644,8 @@ rounding_method(int argc, VALUE *argv, VALUE x, VALUE mode)
  *
  *  Returns _dec_ truncated to an +Integer+.
  *
- *  This is identical to +dec.round(n, Decimal::ROUND_DOWN)+.
- *  See +Decimal#round+ for more details.
+ *  This is identical to <code>dec.round(n, Decimal::ROUND_DOWN)</code>.
+ *  See Decimal#round for more details.
  */
 static VALUE
 dec_truncate(int argc, VALUE *argv, VALUE x)
@@ -1664,8 +1664,8 @@ dec_truncate(int argc, VALUE *argv, VALUE x)
  *     Decimal("-1.2").floor   #=> -2
  *     Decimal("-2.0").floor   #=> -2
  *
- *  This is identical to +dec.round(n, Decimal::ROUND_FLOOR)+.
- *  See +Decimal#round+ for more details.
+ *  This is identical to <code>dec.round(n, Decimal::ROUND_FLOOR)</code>.
+ *  See Decimal#round for more details.
  */
 static VALUE
 dec_floor(int argc, VALUE *argv, VALUE x)
@@ -1684,8 +1684,8 @@ dec_floor(int argc, VALUE *argv, VALUE x)
  *     Decimal("-1.2").ceil   #=> -1
  *     Decimal("-2.0").ceil   #=> -2
  *
- *  This is identical to +dec.round(n, Decimal::ROUND_CEILING)+.
- *  See +Decimal#round+ for more details.
+ *  This is identical to <code>dec.round(n, Decimal::ROUND_CEILING)</code>.
+ *  See Decimal#round for more details.
  */
 static VALUE
 dec_ceil(int argc, VALUE *argv, VALUE x)
@@ -1760,8 +1760,8 @@ dec_nan_p(VALUE num)
  *  call-seq:
  *     dec.finite?   => true or false
  *
- *  Returns +true+ if _dec_ is a finite number (it is not infinite,
- *  and +nan?+ is +false+).
+ *  Returns +true+ if _dec_ is a finite number (it is not infinite
+ *  nor NaN).
  *
  *     Decimal(0).finite?             #=> true
  *     Decimal(1).divide(0).finite?   #=> false
