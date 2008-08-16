@@ -87,7 +87,10 @@ static const VALUE PZERO = 2, NZERO = 6;
 #define DEC_ZERO_P(d) ((d)->inum == PZERO || (d)->inum == NZERO)
 #define INUM_SPZERO_P(n) ((n) == PZERO || (n) == NZERO)
 
-/* all rounding modes, corresponding to DEF_ROUNDING_MODE() */
+/*
+ * all rounding modes used in Decimal#round, corresponding to
+ * DEF_ROUNDING_MODE()
+ */
 static VALUE ROUND_CEILING;
 static VALUE ROUND_DOWN;
 static VALUE ROUND_FLOOR;
@@ -258,7 +261,7 @@ dec_s_allocate(VALUE klass)
  *  <code>Kernel.Float()</code>'s one.  In a +Regexp+, it might be:
  * 
  *     decimal = /\A\s*#{body}\s*\z/
- *     body    = /#{number}(\.#{number})?([eE]#{number})?/
+ *     body    = /#{number}(\.#{digits})?([eE]#{number})?/
  *     number  = /(\+-)?#{digits}/
  *     digits  = /(\d+_)*\d+/
  *
@@ -291,8 +294,8 @@ dec_initialize(VALUE self, VALUE arg)
  *  call-seq:
  *     Decimal(arg)   => decimal
  *  
- *  Identical to +Decimal.new(arg)+, except that this method never be
- *  affected from overriding of Decimal#initialize.
+ *  Identical to <code>Decimal.new(arg)</code>, except that this method
+ *  never be affected from overriding Decimal#initialize.
  */
 static VALUE
 f_decimal(VALUE klass_unused, VALUE arg)
@@ -301,6 +304,7 @@ f_decimal(VALUE klass_unused, VALUE arg)
 }
 
 #ifdef DEBUG
+/* :nodoc */
 static VALUE
 dec_scale(VALUE self)
 {
@@ -311,6 +315,7 @@ dec_scale(VALUE self)
     return LONG2NUM(d->scale);
 }
 
+/* :nodoc */
 static VALUE
 dec_unscaled_value(VALUE self)
 {
@@ -321,6 +326,7 @@ dec_unscaled_value(VALUE self)
     return DEC_ZERO_P(d) ? INT2FIX(0) : d->inum;
 }
 
+/* :nodoc */
 static VALUE
 dec_strip_trailing_zeros(VALUE self)
 {
@@ -958,6 +964,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 }
 
 #ifdef DEBUG
+/* :nodoc */
 static VALUE
 dec_div(VALUE x, VALUE y)
 {
@@ -1028,6 +1035,7 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
     else if (!DEC_IMMEDIATE_P(mod)) xfree(mod);
 }
 
+/* :nodoc */
 static VALUE
 dec_idiv(VALUE x, VALUE y)
 {
@@ -1799,16 +1807,21 @@ dec_infinite_p(VALUE num)
 }
 
 /*
- * +Decimal+ is a decimal fraction that holds exact number in the decimal
- * system unlike +Float+.  It can hold multi-precision digits, so you can
- * calculate any detailed number as you likes.
+ *  +Decimal+ is a decimal fraction that holds exact number in the decimal
+ *  system unlike +Float+.  It can hold multi-precision digits, so you can
+ *  calculate any detailed number as you likes.
  */
 void
 Init_decimal(void)
 {
     cDecimal = rb_define_class("Decimal", rb_cNumeric);
+    /*  Raised when infinite or NaN was rounded. */
     eDomainError = rb_define_class_under(cDecimal, "DomainError",
 					 rb_eRangeError);
+    /*
+     *  Raised when rounding necessary in spite of a constant
+     *  Decimal::ROUND_UNNECESSARY was passed to Decimal#round.
+     */
     eArithmeticError = rb_define_class_under(cDecimal, "ArithmeticError",
 					     rb_eStandardError);
 
