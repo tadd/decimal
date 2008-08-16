@@ -28,7 +28,7 @@
 
 /*
  * INUM_* macros: receive both Fixnum and Bignum,
- *		  to operate Integers transparently
+ *                to operate any types of Integers transparently
  */
 #define INUM_PLUS(a, b) \
     (FIXNUM_P(a) ? fix_plus(a, b) : rb_big_plus(a, b))
@@ -117,7 +117,7 @@ dec_mark(void *p)
 
     if (d == NULL) return; /* uninitialized object */
     if (!FIXNUM_P(d->inum) && !INUM_SPZERO_P(d->inum)) {
-	rb_gc_mark(d->inum); /* mark a Bignum */
+        rb_gc_mark(d->inum); /* mark a Bignum */
     }
 }
 
@@ -177,12 +177,12 @@ cstr_to_dec(const char *str)
     assoc[0] = (VALUE)s;
     assoc[1] = (VALUE)str;
     if (ss = strpbrk(s, "Ee")) {
-	*ss++ = '\0'; /* for strchr() */
-	inum = rb_rescue(cstr_to_inum, (VALUE)ss, invalid_str, (VALUE)assoc);
-	scale -= NUM2LONG(inum);
+        *ss++ = '\0'; /* for strchr() */
+        inum = rb_rescue(cstr_to_inum, (VALUE)ss, invalid_str, (VALUE)assoc);
+        scale -= NUM2LONG(inum);
     }
     if (ss = strchr(s, '.')) {
-	const char *p;
+        const char *p;
 
 #if RUBY_RELEASE_CODE == 20070924 /* bug workaround for 1.8.6-p111 */
         if (ss == s || ss[-1] != '0') goto out;
@@ -195,15 +195,15 @@ cstr_to_dec(const char *str)
         else
   out:
 #endif
-	*ss = '_'; /* so that rb_cstr_to_inum() can ignore '.' */
-	for (p = ss + 1; ISDIGIT(*p) || *p == '_'; p++) {
-	    if (ISDIGIT(*p)) scale++;
-	}
+        *ss = '_'; /* so that rb_cstr_to_inum() can ignore '.' */
+        for (p = ss + 1; ISDIGIT(*p) || *p == '_'; p++) {
+            if (ISDIGIT(*p)) scale++;
+        }
     }
     inum = rb_rescue(cstr_to_inum, (VALUE)s, invalid_str, (VALUE)assoc);
     d = ALLOC(Decimal);
     if (INUM_ZERO_P(inum)) {
-	d->inum = strchr(s, '-') ? NZERO : PZERO;
+        d->inum = strchr(s, '-') ? NZERO : PZERO;
     }
     else d->inum = inum;
     d->scale = scale;
@@ -218,7 +218,7 @@ finite_dup(Decimal *d)
 
     *d2 = *d;
     if (!FIXNUM_P(d->inum) && !INUM_SPZERO_P(d->inum)) {
-	d2->inum = rb_big_clone(d->inum); /* inum is a Bignum */
+        d2->inum = rb_big_clone(d->inum); /* inum is a Bignum */
     }
     return d2;
 }
@@ -229,14 +229,14 @@ create_dec(VALUE arg)
     switch (TYPE(arg)) {
       case T_FIXNUM:
       case T_BIGNUM:
-	return inum_to_dec(arg);
+        return inum_to_dec(arg);
       case T_STRING:
-	return cstr_to_dec(StringValueCStr(arg));
+        return cstr_to_dec(StringValueCStr(arg));
       case T_FLOAT:
-	rb_raise(rb_eArgError, "invalid type Float: %s",
+        rb_raise(rb_eArgError, "invalid type Float: %s",
                  RSTRING(rb_inspect(arg))->ptr);
       default:
-	rb_raise(rb_eArgError, "invalid value for Decimal: %s",
+        rb_raise(rb_eArgError, "invalid value for Decimal: %s",
                  RSTRING(rb_inspect(arg))->ptr);
     }
     return NULL; /* not reached */
@@ -249,6 +249,33 @@ dec_s_allocate(VALUE klass)
     return Data_Wrap_Struct(klass, dec_mark, dec_free, NULL);
 }
 
+/*
+ *  call-seq:
+ *     Decimal.new(arg)   => decimal
+ *
+ *  Returns a new decimal made from _arg_.  The _arg_ must be an +Integer+
+ *  or a +String+.  An acceptable format of +String+ is equal to +Float()+'s
+ *  one.  In a +Regexp+, it might be:
+ * 
+ *     _decimal_ = +/\A\s*#{body}\s*\z/+
+ *     _body_    = +/#{number}(\.#{number})?([eE]#{number})?/+
+ *     _number_  = +/(\+-)?#{digits}/+
+ *     _digits_  = +/(\d+_)*\d+/+
+ *
+ *  And samples are here:
+ *
+ *     Decimal(1)                  #=> Decimal(1)
+ *     Decimal(2**64)              #=> Decimal(18446744073709551616)
+ *     Decimal("1")                #=> Decimal(1)
+ *     Decimal("1.1")              #=> Decimal(1.1)
+ *     Decimal("1e10")             #=> Decimal(10000000000)
+ *     Decimal("299_792_458")      #=> Decimal(299792458)
+ *     Decimal("2.99_792_458e8")   #=> Decimal(299792458)
+ *
+ *  Notice that a +Float+ is *not* acceptable for _arg_ to keep exactness.
+ *
+ *     Decimal.new(1.1)            #=> (ArgumentError)
+ */
 static VALUE
 dec_initialize(VALUE self, VALUE arg)
 {
