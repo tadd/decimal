@@ -351,7 +351,7 @@ dec_strip_trailing_zeros(VALUE self)
     }
     return WrapDecimal(d2);
 }
-#endif
+#endif /* DEBUG */
 
 /* FIXME: should return "%g" format string */
 static VALUE
