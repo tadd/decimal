@@ -295,7 +295,7 @@ dec_initialize(VALUE self, VALUE arg)
  *     Decimal(arg)   => decimal
  *  
  *  Identical to <code>Decimal.new(arg)</code>, except that this method
- *  never be affected from overriding Decimal#initialize.
+ *  never be affected from overriding <code>Decimal#initialize</code>.
  */
 static VALUE
 f_decimal(VALUE klass_unused, VALUE arg)
@@ -1653,7 +1653,7 @@ rounding_method(int argc, VALUE *argv, VALUE x, VALUE mode)
  *  Returns _dec_ truncated to an +Integer+.
  *
  *  This is identical to <code>dec.round(n, Decimal::ROUND_DOWN)</code>.
- *  See Decimal#round for more details.
+ *  See <code>Decimal#round</code> for more details.
  */
 static VALUE
 dec_truncate(int argc, VALUE *argv, VALUE x)
@@ -1673,7 +1673,7 @@ dec_truncate(int argc, VALUE *argv, VALUE x)
  *     Decimal("-2.0").floor   #=> -2
  *
  *  This is identical to <code>dec.round(n, Decimal::ROUND_FLOOR)</code>.
- *  See Decimal#round for more details.
+ *  See <code>Decimal#round</code> for more details.
  */
 static VALUE
 dec_floor(int argc, VALUE *argv, VALUE x)
@@ -1693,7 +1693,7 @@ dec_floor(int argc, VALUE *argv, VALUE x)
  *     Decimal("-2.0").ceil   #=> -2
  *
  *  This is identical to <code>dec.round(n, Decimal::ROUND_CEILING)</code>.
- *  See Decimal#round for more details.
+ *  See <code>Decimal#round</code> for more details.
  */
 static VALUE
 dec_ceil(int argc, VALUE *argv, VALUE x)
@@ -1820,7 +1820,8 @@ Init_decimal(void)
 					 rb_eRangeError);
     /*
      *  Raised when rounding necessary in spite of a constant
-     *  Decimal::ROUND_UNNECESSARY was passed to Decimal#round.
+     *  <code>Decimal::ROUND_UNNECESSARY</code> was passed to
+     *  <code>Decimal#round</code>.
      */
     eArithmeticError = rb_define_class_under(cDecimal, "ArithmeticError",
 					     rb_eStandardError);
