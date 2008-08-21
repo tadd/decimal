@@ -191,7 +191,7 @@ cstr_to_dec(const char *str)
         if (ss == s || ss[-1] != '0') goto out;
         p = ss;
         do {
-            p--;  
+            p--;
         } while (*p == '0' && p > s);
         if (*p == '0' || *p == '-' || *p == '+' || ISSPACE(*p))
             *ss = '0';
@@ -259,7 +259,7 @@ dec_s_allocate(VALUE klass)
  *  Returns a new decimal made from _arg_.  The _arg_ must be an +Integer+
  *  or a +String+.  An acceptable format of +String+ is equal to
  *  <code>Kernel.Float()</code>'s one.  In a +Regexp+, it might be:
- * 
+ *
  *     decimal = /\A\s*#{body}\s*\z/
  *     body    = /#{number}(\.#{digits})?([eE]#{number})?/
  *     number  = /(\+-)?#{digits}/
@@ -293,7 +293,7 @@ dec_initialize(VALUE self, VALUE arg)
 /*
  *  call-seq:
  *     Decimal(arg)   => decimal
- *  
+ *
  *  Identical to <code>Decimal.new(arg)</code>, except that this method
  *  never be affected from overriding <code>Decimal#initialize</code>.
  */
@@ -310,7 +310,7 @@ dec_scale(VALUE self)
 {
     Decimal *d;
 
-    GetDecimal(self, d); 
+    GetDecimal(self, d);
     if (DEC_IMMEDIATE_P(d)) return Qnil;
     return LONG2NUM(d->scale);
 }
@@ -338,7 +338,7 @@ dec_strip_trailing_zeros(VALUE self)
     if (DEC_ZERO_P(d)) { /* XXX: negative scale? */
         if (d->scale <= 0) return self;
 	d2 = finite_dup(d);
-	d2->scale = 0; 
+	d2->scale = 0;
 	return WrapDecimal(d2);
     }
     d2 = ALLOC(Decimal);
@@ -594,7 +594,7 @@ dec_plus(VALUE x, VALUE y)
     }
     GetDecimal(x, a);
     if (a == DEC_NaN) return VALUE_NaN;
-    
+
     /* now, x and y are not NaNs */
     if (DEC_ISINF(a)) {
 	if (DEC_ISINF(b) && a != b) return VALUE_NaN;
@@ -874,7 +874,7 @@ valid_rounding_mode(VALUE sym)
  *     dec.divide(other, scale=0, mode=Decimal::ROUND_UNNECESSARY)   #=> decimal or integer
  *
  *  *WARNING*: The behavior of this method may change.
- * 
+ *
  *  Returns a new decimal which is the result of dividing _dec_ by _other_.
  */
 static VALUE
@@ -1111,7 +1111,7 @@ dec_mod(VALUE x, VALUE y)
  *     Decimal(11).divmod(-3)	                #=> [Decimal(-4), Decimal(-1)]
  *     Decimal(11).divmod(Decimal("3.5"))       #=> [Decimal(3), Decimal(0.5)]
  *     Decimal(-11).divmod(Decimal("3.5"))      #=> [Decimal(-4), Decimal(3.0)]
- *     Decimal("11.5").divmod(Decimal("3.5"))   #=> [Decimal(3), Decimal(1.0)]   
+ *     Decimal("11.5").divmod(Decimal("3.5"))   #=> [Decimal(3), Decimal(1.0)]
  *
  *  See Numeric#divmod for more details.
  */
@@ -1148,7 +1148,7 @@ power_with_fixnum(Decimal *x, VALUE y)
     Decimal *d;
     VALUE inum;
 
-    /* XXX: it's valid to rb_warn() out of here, rb_big_pow()? */ 
+    /* XXX: it's valid to rb_warn() out of here, rb_big_pow()? */
     inum = INUM_POW(x->inum, y);
     if (TYPE(inum) == T_FLOAT) /* got Infinity with warning, by too-big y */
         return VALUE_PINF;
@@ -1839,7 +1839,7 @@ Init_decimal(void)
     rb_global_variable(&VALUE_PINF);
     rb_global_variable(&VALUE_NINF);
     rb_global_variable(&VALUE_NaN);
-    
+
 #define DEF_ROUNDING_MODE(MODE, mode) do { \
     ROUND_ ## MODE = ID2SYM(rb_intern(#mode)); \
     rb_define_const(cDecimal, "ROUND_" #MODE, ROUND_ ## MODE); \
@@ -1860,7 +1860,7 @@ Init_decimal(void)
 		     dec_strip_trailing_zeros, 0);
     rb_define_method(cDecimal, "strip", dec_strip_trailing_zeros, 0);
 #endif
-    
+
     rb_define_method(cDecimal, "to_s", dec_to_s, 0);
     rb_define_method(cDecimal, "inspect", dec_inspect, 0);
     rb_define_method(cDecimal, "coerce", dec_coerce, 1);
