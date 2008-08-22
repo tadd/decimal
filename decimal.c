@@ -1195,22 +1195,22 @@ dec_pow(VALUE x, VALUE y)
 static int
 normal_cmp(Decimal *x, Decimal *y)
 {
-    Decimal *max, *min;
-    VALUE n;
-    const int c = FIX2INT(INUM_CMP(x->inum, y->inum));
-
-    if (x->scale == y->scale) return c;
-    if (c == 0) {
-	return x->scale > y->scale ? -1 : 1;
+    if (INUM_NEGATIVE_P(x->inum) && !INUM_NEGATIVE_P(y->inum)) {
+        return 1;
     }
-    if (c < 0 && x->scale > y->scale) return -1;
-    if (c > 0 && x->scale < y->scale) return 1;
-    /* XXX: align scales */
-    if (x->scale < y->scale) min = x, max = y;
-    else min = y, max = x;
-    n = inum_lshift(min->inum, max->scale - min->scale);
-    if (x == max) return FIX2INT(INUM_CMP(max->inum, n));
-    return FIX2INT(INUM_CMP(n, max->inum));
+    if (!INUM_NEGATIVE_P(x->inum) && INUM_NEGATIVE_P(y->inum)) {
+        return -1;
+    }
+    if (x->scale == y->scale) return FIX2INT(INUM_CMP(x->inum, y->inum));
+    /* XXX: can be optimized with INUM_EQ()? */
+    if (x->scale < y->scale) {
+        VALUE x_scaled = inum_lshift(x->inum, y->scale - x->scale);
+        return FIX2INT(INUM_CMP(x_scaled, y->inum));
+    }
+    else {
+        VALUE y_scaled = inum_lshift(y->inum, x->scale - y->scale);
+        return FIX2INT(INUM_CMP(x->inum, y_scaled));
+    }
 }
 
 /* never accepts NaN for x or y */
