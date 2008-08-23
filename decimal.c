@@ -1196,10 +1196,10 @@ static int
 normal_cmp(Decimal *x, Decimal *y)
 {
     if (INUM_NEGATIVE_P(x->inum) && !INUM_NEGATIVE_P(y->inum)) {
-        return 1;
+        return -1;
     }
     if (!INUM_NEGATIVE_P(x->inum) && INUM_NEGATIVE_P(y->inum)) {
-        return -1;
+        return 1;
     }
     if (x->scale == y->scale) return FIX2INT(INUM_CMP(x->inum, y->inum));
     /* XXX: can be optimized with INUM_EQ()? */
