@@ -895,7 +895,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	Check_Type(vmode, T_SYMBOL);
 	if (!valid_rounding_mode(vmode)) {
 	    rb_raise(rb_eArgError, "invalid rounding mode %s",
-                     RSTRING(rb_inspect(mode))->ptr);
+                     RSTRING(rb_inspect(vmode))->ptr);
 	}
 	mode = vmode;
 	/* fall through */
