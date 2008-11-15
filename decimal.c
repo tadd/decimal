@@ -37,7 +37,7 @@
 #define INUM_MUL(a, b) \
     (FIXNUM_P(a) ? fix_mul(a, b) : rb_big_mul(a, b))
 #define INUM_DIV(a, b) \
-    (FIXNUM_P(a) ? fix_div(a, b) : RARRAY(rb_big_divmod(a, b))->ptr[0])
+    (FIXNUM_P(a) ? fix_div(a, b) : RARRAY_PTR(rb_big_divmod(a, b))[0])
 #define INUM_DIVMOD(a, b) \
     (FIXNUM_P(a) ? fix_divmod(a, b) : rb_big_divmod(a, b))
 #define INUM_POW(a, b) \
@@ -58,7 +58,7 @@
 #define INUM_ZERO_P(n) (FIXNUM_P(n) && FIX2LONG(n) == 0)
 #define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : !RBIGNUM(n)->sign)
 #define INUM_BOTTOMDIG(n) (FIXNUM_P(n) ? FIX2LONG(n) % 10 : \
-  !BIGZEROP(n) ? FIX2INT(RARRAY(rb_big_divmod(n, INT2FIX(10)))->ptr[1]) : 0)
+  !BIGZEROP(n) ? FIX2INT(RARRAY_PTR(rb_big_divmod(n, INT2FIX(10)))[1]) : 0)
 #define INUM_ODD_P(n) (FIXNUM_P(n) ? n & 2 : BDIGITS(n)[0] & 1)
 
 /* the body */
@@ -237,10 +237,10 @@ create_dec(VALUE arg)
         return cstr_to_dec(StringValueCStr(arg));
       case T_FLOAT:
         rb_raise(rb_eArgError, "invalid type Float: %s",
-                 RSTRING(rb_inspect(arg))->ptr);
+                 RSTRING_PTR(rb_inspect(arg)));
       default:
         rb_raise(rb_eArgError, "invalid value for Decimal: %s",
-                 RSTRING(rb_inspect(arg))->ptr);
+                 RSTRING_PTR(rb_inspect(arg)));
     }
     return NULL; /* not reached */
 }
@@ -358,7 +358,7 @@ static VALUE
 finite_to_s(Decimal *d)
 {
     const VALUE str = INUM2STR(d->inum);
-    const char *s = RSTRING(str)->ptr;
+    const char *s = RSTRING_PTR(str);
     const long slen = RSTRING(str)->len;
     const long scale = d->scale;
     long snumlen, sslen, diff;
@@ -450,7 +450,7 @@ dec_inspect(VALUE self)
     str = dec_to_s(self);
     len = 9 + RSTRING(str)->len; /* 9 == strlen("Decimal()") */
     s = ALLOC_N(char, len + 1); /* +1 for NUL */
-    sprintf(s, "Decimal(%s)", RSTRING(str)->ptr);
+    sprintf(s, "Decimal(%s)", RSTRING_PTR(str));
     newstr = rb_str_new(s, len);
     xfree(s);
     return newstr;
@@ -769,9 +769,9 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
 	mode == ROUND_UNNECESSARY) {
 	shift = inum_lshift(INT2FIX(1), diff);
 	ary = INUM_DIVMOD(inumabs, shift);
-	inum = RARRAY(ary)->ptr[0];
+	inum = RARRAY_PTR(ary);
 	if (mode == ROUND_DOWN) goto coda;
-	trailing_nonzero = !INUM_ZERO_P(RARRAY(ary)->ptr[1]);
+	trailing_nonzero = !INUM_ZERO_P(RARRAY_PTR(ary)[1]);
 	if (mode == ROUND_CEILING) {
 	    if (!negative && trailing_nonzero) INUM_INC(inum);
 	}
@@ -795,8 +795,8 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
             inumabs = INUM_DIV(inumabs, shift);
         }
 	ary = INUM_DIVMOD(inumabs, INT2FIX(10));
-	inum = RARRAY(ary)->ptr[0];
-	lower = FIX2INT(RARRAY(ary)->ptr[1]);
+	inum = RARRAY_PTR(ary)[0];
+	lower = FIX2INT(RARRAY_PTR(ary)[1]);
 	if (mode == ROUND_HALF_DOWN) {
 	    if (lower > 5) INUM_INC(inum);
 	}
@@ -895,7 +895,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	Check_Type(vmode, T_SYMBOL);
 	if (!valid_rounding_mode(vmode)) {
 	    rb_raise(rb_eArgError, "invalid rounding mode %s",
-                     RSTRING(rb_inspect(vmode))->ptr);
+                     RSTRING_PTR(rb_inspect(vmode)));
 	}
 	mode = vmode;
 	/* fall through */
@@ -1724,7 +1724,7 @@ dec_round(int argc, VALUE *argv, VALUE x)
 	Check_Type(mode, T_SYMBOL);
 	if (!valid_rounding_mode(mode)) {
 	    rb_raise(rb_eArgError, "invalid rounding mode %s",
-                     RSTRING(rb_inspect(mode))->ptr);
+                     RSTRING_PTR(rb_inspect(mode)));
 	}
 	/* fall through */
       case 1:
