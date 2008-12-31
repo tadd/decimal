@@ -769,7 +769,7 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
 	mode == ROUND_UNNECESSARY) {
 	shift = inum_lshift(INT2FIX(1), diff);
 	ary = INUM_DIVMOD(inumabs, shift);
-	inum = RARRAY_PTR(ary);
+	inum = RARRAY_PTR(ary)[0];
 	if (mode == ROUND_DOWN) goto coda;
 	trailing_nonzero = !INUM_ZERO_P(RARRAY_PTR(ary)[1]);
 	if (mode == ROUND_CEILING) {
