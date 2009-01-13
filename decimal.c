@@ -258,14 +258,14 @@ dec_s_allocate(VALUE klass)
  *
  *  Returns a new decimal made from _arg_.  The _arg_ must be an +Integer+
  *  or a +String+.  An acceptable format of +String+ is equal to
- *  <code>Kernel.Float()</code>'s one.  In a +Regexp+, it might be:
+ *  <code>Kernel.Float()</code>'s one.  In a +Regexp+, it should be:
  *
- *     decimal = /\A\s*#{body}\s*\z/
- *     body    = /#{number}(\.#{digits})?([eE]#{number})?/
- *     number  = /(\+-)?#{digits}/
  *     digits  = /(\d+_)*\d+/
+ *     number  = /(\+-)?#{digits}/
+ *     body    = /#{number}(\.#{digits})?([eE]#{number})?/
+ *     decimal = /\A\s*#{body}\s*\z/
  *
- *  And samples are here:
+ *  And its samples are:
  *
  *     Decimal(1)                  #=> Decimal(1)
  *     Decimal(2**64)              #=> Decimal(18446744073709551616)
@@ -283,7 +283,6 @@ static VALUE
 dec_initialize(VALUE self, VALUE arg)
 {
     if (DECIMAL_P(arg)) {
-	rb_gc_force_recycle(self); /* never use empty object */
 	return arg;
     }
     DATA_PTR(self) = create_dec(arg);
@@ -494,10 +493,10 @@ dec_coerce(VALUE x, VALUE y)
 }
 
 /*
- * call-seq:
- *    -dec   => decimal
+ *  call-seq:
+ *     -dec   => decimal
  *
- * Returns a negated value of _dec_.
+ *  Returns a negated value of _dec_.
  */
 static VALUE
 dec_uminus(VALUE num)
@@ -531,7 +530,7 @@ inum_lshift(VALUE x, long n)
     return INUM_MUL(x, y);
 }
 
-/* the "normal" number means "finite and nonzero" */
+/* the "normal" number means "finite and non-zero" */
 static Decimal *
 normal_plus(Decimal *x, Decimal *y, const int add)
 {
@@ -565,7 +564,7 @@ normal_plus(Decimal *x, Decimal *y, const int add)
 
 /*
  *  call-seq:
- *    dec + other   => decimal
+ *     dec + other   => decimal
  *
  *  Returns a new decimal which is the sum of _dec_ and _other_.
  */
@@ -616,7 +615,7 @@ dec_plus(VALUE x, VALUE y)
 
 /*
  *  call-seq:
- *    dec - other   => decimal
+ *     dec - other   => decimal
  *
  *  Returns a new float which is the difference of _dec_ and _other_.
  */
@@ -674,7 +673,7 @@ normal_mul(Decimal *x, Decimal *y)
 
 /*
  *  call-seq:
- *    dec * other   => decimal
+ *     dec * other   => decimal
  *
  *  Returns a new decimal which is the product of _dec_ and _other_.
  */
@@ -874,6 +873,8 @@ valid_rounding_mode(VALUE sym)
  *     dec.divide(other, scale=0, mode=Decimal::ROUND_UNNECESSARY)   #=> decimal or integer
  *
  *  *WARNING*: The behavior of this method may change.
+ *
+ *  *FIXME*: write details
  *
  *  Returns a new decimal which is the result of dividing _dec_ by _other_.
  */
@@ -1148,7 +1149,7 @@ power_with_fixnum(Decimal *x, VALUE y)
     Decimal *d;
     VALUE inum;
 
-    /* XXX: it's valid to rb_warn() out of here, rb_big_pow()? */
+    /* XXX: valid to rb_warn() out of here by rb_big_pow()? */
     inum = INUM_POW(x->inum, y);
     if (TYPE(inum) == T_FLOAT) /* got Infinity with warning, by too-big y */
         return VALUE_PINF;
@@ -1158,9 +1159,12 @@ power_with_fixnum(Decimal *x, VALUE y)
     return WrapDecimal(d);
 }
 
+/* TODO: implement dec ** otherdec */
 /*
  *  call-seq:
  *     dec ** fix   => decimal
+ *
+ *  *WARNING*: The behavior of this method may change.
  *
  *  Raises _dec_ the _fix_ power.
  */
@@ -1240,6 +1244,7 @@ cmp(Decimal *x, Decimal *y)
  *
  *     Decimal(1) == 1                #=> true
  *     Decimal(1) == Decimal("1.0")   #=> true
+ *     Decimal(1) == 1.0              #=> nil
  */
 static VALUE
 dec_eq(VALUE x, VALUE y)
@@ -1307,7 +1312,7 @@ dec_cmp(VALUE x, VALUE y)
  *  call-seq:
  *     dec > other   => true or false
  *
- *  Returns +true+ if _dec_ is greater than +other+.
+ *  Returns +true+ if _dec_ is greater than _other_.
  */
 static VALUE
 dec_gt(VALUE x, VALUE y)
@@ -1341,7 +1346,7 @@ dec_gt(VALUE x, VALUE y)
  *  call-seq:
  *     dec >= other   => true or false
  *
- *  Returns +true+ if _dec_ is greater than or equal to +other+.
+ *  Returns +true+ if _dec_ is greater than or equal to _other_.
  */
 static VALUE
 dec_ge(VALUE x, VALUE y)
@@ -1375,7 +1380,7 @@ dec_ge(VALUE x, VALUE y)
  *  call-seq:
  *     dec < other   => true or false
  *
- *  Returns +true+ if _dec_ is less than +other+.
+ *  Returns +true+ if _dec_ is less than _other_.
  */
 static VALUE
 dec_lt(VALUE x, VALUE y)
@@ -1409,7 +1414,7 @@ dec_lt(VALUE x, VALUE y)
  *  call-seq:
  *     dec <= other   => true or false
  *
- *  Returns +true+ if _dec_ is less than or equal to +other+.
+ *  Returns +true+ if _dec_ is less than or equal to _other_.
  */
 static VALUE
 dec_le(VALUE x, VALUE y)
@@ -1443,7 +1448,7 @@ dec_le(VALUE x, VALUE y)
  *  call-seq:
  *     dec.eql?(other)   => true or false
  *
- *  Returns +true+ if _other_ is a +Decimal+ and is equal to _dec_,
+ *  Returns +true+ if _other_ is a +Decimal+ and is equal to _dec_
  *  including their values of scale.
  *
  *     Decimal(1) == 1                    #=> true
@@ -1480,7 +1485,7 @@ dec_eql(VALUE x, VALUE y)
  *  call-seq:
  *     dec.hash   => integer
  *
- *   Returns a hash code for _dec_.
+ *  Returns a hash code for _dec_.
  */
 static VALUE
 dec_hash(VALUE x)
@@ -1625,9 +1630,9 @@ dec_to_i(VALUE num)
     VALUE inum;
 
     GetDecimal(num, d);
-    do_round(d, 0, ROUND_DOWN, &inum); /* identical to "d.round(0, :down)" */
+    do_round(d, 0, ROUND_DOWN, &inum); /* equal to "d.round(0, :down)" */
     return inum;
-}
+ }
 
 static VALUE
 rounding_method(int argc, VALUE *argv, VALUE x, VALUE mode)
@@ -1705,8 +1710,11 @@ dec_ceil(int argc, VALUE *argv, VALUE x)
  *  call-seq:
  *     dec.round(n=0, mode=Decimal::ROUND_HALF_UP)   => integer or decimal
  *
- *  Rounds _dec_ to a given precision in decimal digits (default 0 digits).
- *  Precision may be negative.  Returns a +Decimal+ when _n_ is more than one.
+ *  *FIXME*: more examples 
+ *
+ *  Rounds _dec_ to a given precision _n_ in decimal digits (default 0 digits)
+ *  with rounding mode _mode_.  Precision may be negative.  Returns a
+ *  +Decimal+ when _n_ is greater than 0, +Integer+ otherwise.
  *
  *     Decimal("1.5").round    #=> 2
  *     Decimal("-1.5").round   #=> -2
@@ -1810,6 +1818,8 @@ dec_infinite_p(VALUE num)
  *  +Decimal+ is a decimal fraction that holds exact number in the decimal
  *  system unlike +Float+.  It can hold multi-precision digits, so you can
  *  calculate any detailed number as you likes.
+ *
+ *  *FIXME*: write about exceptions about Float and scales
  */
 void
 Init_decimal(void)
@@ -1819,7 +1829,7 @@ Init_decimal(void)
     eDomainError = rb_define_class_under(cDecimal, "DomainError",
 					 rb_eRangeError);
     /*
-     *  Raised when rounding necessary in spite of a constant
+     *  Raised when rounding is necessary in spite of a constant
      *  <code>Decimal::ROUND_UNNECESSARY</code> was passed to
      *  <code>Decimal#round</code>.
      */
