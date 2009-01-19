@@ -874,9 +874,9 @@ valid_rounding_mode(VALUE sym)
  *
  *  *WARNING*: The behavior of this method may change.
  *
- *  *FIXME*: write details
- *
  *  Returns a new decimal which is the result of dividing _dec_ by _other_.
+ *
+ *  *FIXME*: write details
  */
 static VALUE
 dec_divide(int argc, VALUE *argv, VALUE x)
@@ -1819,7 +1819,7 @@ dec_infinite_p(VALUE num)
  *  system unlike +Float+.  It can hold multi-precision digits, so you can
  *  calculate any detailed number as you likes.
  *
- *  *FIXME*: write about exceptions about Float and scales
+ *  *FIXME*: write exceptions raised by Float and details about scales
  */
 void
 Init_decimal(void)
