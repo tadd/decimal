@@ -74,4 +74,51 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(Decimal(-1), sum)
     assert_raise(TypeError) {Decimal("0.1") - 1.0}
   end
+
+  def test_mul
+    assert_equal(Decimal(1), Decimal("0.1") * 10)
+    sum = Decimal(1)
+    10.times {sum *= Decimal("0.1")}
+    assert_equal(Decimal("0.0000000001"), sum)
+    assert_raise(TypeError) {Decimal("0.1") * 1.0}
+  end
+
+  def test_div
+    assert_equal(Decimal("0.1"), Decimal(1).divide(10, 1))
+    sum = Decimal(1 << 10)
+    10.times {sum = sum.divide(2)}
+    assert_equal(Decimal(1), sum)
+    assert_raise(TypeError) {Decimal("0.1").divide(1.0)}
+  end
+
+  def test_idiv
+    assert_equal(2, Decimal("11.5").div(4))
+    assert_equal(-3, Decimal("11.5").div(-4))
+    assert_equal(-3, Decimal("-11.5").div(4))
+    assert_equal(2, Decimal("-11.5").div(-4))
+    assert_raise(TypeError) {Decimal(11).div(4.0)}
+  end
+
+  def test_mod
+    assert_equal(Decimal("3.5"), Decimal("11.5") % 4)
+    assert_equal(Decimal("-0.5"), Decimal("11.5") % -4)
+    assert_equal(Decimal("0.5"), Decimal("-11.5") % 4)
+    assert_equal(Decimal("-3.5"), Decimal("-11.5") % -4)
+    assert_raise(TypeError) {Decimal(11) % 4.0}
+  end
+
+  def test_divmod
+    assert_equal([2, Decimal("3.5")], Decimal("11.5").divmod(4))
+    assert_equal([-3, Decimal("-0.5")], Decimal("11.5").divmod(-4))
+    assert_equal([-3, Decimal("0.5")], Decimal("-11.5").divmod(4))
+    assert_equal([2, Decimal("-3.5")], Decimal("-11.5").divmod(-4))
+    assert_raise(TypeError) {Decimal(11).divmod(4.0)}
+  end
+
+  def test_pow
+    assert_equal(1 << 10, Decimal(2) ** 10)
+    assert_equal(1, Decimal(1) ** 10)
+    assert_equal(Decimal("0.0000000001"), Decimal("0.1") ** 10)
+    assert_raise(TypeError) {Decimal(1) ** 10.0}
+  end
 end
