@@ -1495,7 +1495,10 @@ dec_hash(VALUE x)
 
     GetDecimal(x, d);
     if (!DEC_IMMEDIATE_P(d)) {
-	hash = NUM2LONG(INUM_HASH(d->inum));
+        VALUE inum = d->inum; 
+
+        if (INUM_SPZERO_P(inum)) inum = INT2FIX(0);
+        hash = NUM2LONG(INUM_HASH(inum));
 	hash ^= d->scale;
     }
     else hash = (long)d;
