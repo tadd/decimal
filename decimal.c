@@ -358,7 +358,7 @@ finite_to_s(Decimal *d)
 {
     const VALUE str = INUM2STR(d->inum);
     const char *s = RSTRING_PTR(str);
-    const long slen = RSTRING(str)->len;
+    const long slen = RSTRING_LEN(str);
     const long scale = d->scale;
     long snumlen, sslen, diff;
     int negative;
@@ -447,7 +447,7 @@ dec_inspect(VALUE self)
     long len;
 
     str = dec_to_s(self);
-    len = 9 + RSTRING(str)->len; /* 9 == strlen("Decimal()") */
+    len = 9 + RSTRING_LEN(str); /* 9 == strlen("Decimal()") */
     s = ALLOC_N(char, len + 1); /* +1 for NUL */
     sprintf(s, "Decimal(%s)", RSTRING_PTR(str));
     newstr = rb_str_new(s, len);
