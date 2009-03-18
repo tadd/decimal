@@ -423,9 +423,22 @@ dec_to_s(VALUE self)
     if (d == DEC_NaN) return rb_str_new2("NaN");
     if (d == DEC_PINF) return rb_str_new2("Infinity");
     if (d == DEC_NINF) return rb_str_new2("-Infinity");
-    /* FIXME: use the d->scale */
-    if (d->inum == PZERO) return rb_str_new2("0");
-    if (d->inum == NZERO) return rb_str_new2("-0");
+    if (d->inum == PZERO || d->inum == NZERO) {
+	const size_t HEAD_LEN = d->inum == PZERO ? 2U : 3U; /* "-0.".length */
+	long len = HEAD_LEN + d->scale;
+	char *buf;
+
+	/* FIXME: use "0eN" style when the scale is negative? */
+	if (d->scale <= 0) /* ignore the case of negative scale */
+	    return d->inum == PZERO ? rb_str_new2("0") : rb_str_new2("-0");
+	buf = xmalloc(len);
+	if (d->inum == PZERO)
+	    memcpy(buf, "0.", HEAD_LEN);
+	else
+	    memcpy(buf, "-0.", HEAD_LEN);
+	memset(buf + HEAD_LEN, '0', d->scale);
+	return rb_str_new(buf, len);
+    }
     return finite_to_s(d);
 }
 
