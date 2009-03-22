@@ -173,5 +173,8 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(ZERO.hash, ZERO.hash)
     assert_equal(NaN.hash, NaN.hash)
     assert_equal(INFINITY.hash, INFINITY.hash)
+
+    assert_not_equal(ONE.hash, Decimal("1.0").hash)
+    assert_not_equal(ZERO.hash, Decimal("0.0").hash)
   end
 end
