@@ -76,16 +76,16 @@ static VALUE VALUE_NaN, VALUE_PINF, VALUE_NINF;
 
 /* special constants - i.e. non-zero and non-fixnum */
 /* used for signed zeros that never meet any fixnums nor normal VALUEs */
-static const VALUE PZERO = 2, NZERO = 6;
-#define dec_pzero() WrapDecimal(inum_to_dec(PZERO))
-#define dec_nzero() WrapDecimal(inum_to_dec(NZERO))
+static const VALUE DEC_PZERO = 2, DEC_NZERO = 6;
+#define dec_pzero() WrapDecimal(inum_to_dec(DEC_PZERO))
+#define dec_nzero() WrapDecimal(inum_to_dec(DEC_NZERO))
 
 #define DEC_ISINF(d) ((d) == DEC_PINF || (d) == DEC_NINF)
 /* immediate means non-finite */
 #define DEC_IMMEDIATE_P(d) (DEC_ISINF(d) || (d) == DEC_NaN)
 /* special signed zeros */
-#define DEC_ZERO_P(d) ((d)->inum == PZERO || (d)->inum == NZERO)
-#define INUM_SPZERO_P(n) ((n) == PZERO || (n) == NZERO)
+#define DEC_ZERO_P(d) ((d)->inum == DEC_PZERO || (d)->inum == DEC_NZERO)
+#define INUM_SPZERO_P(n) ((n) == DEC_PZERO || (n) == DEC_NZERO)
 
 /*
  * all rounding modes used in Decimal#round, corresponding to
@@ -146,7 +146,7 @@ inum_to_dec(VALUE x)
     Decimal *d = ALLOC(Decimal);
 
     d = ALLOC(Decimal);
-    if (INUM_ZERO_P(x)) d->inum = PZERO;
+    if (INUM_ZERO_P(x)) d->inum = DEC_PZERO;
     else d->inum = x;
     d->scale = 0;
     return d;
@@ -206,7 +206,7 @@ cstr_to_dec(const char *str)
     inum = rb_rescue(cstr_to_inum, (VALUE)s, invalid_str, (VALUE)assoc);
     d = ALLOC(Decimal);
     if (INUM_ZERO_P(inum)) {
-        d->inum = strchr(s, '-') ? NZERO : PZERO;
+        d->inum = strchr(s, '-') ? DEC_NZERO : DEC_PZERO;
     }
     else d->inum = inum;
     d->scale = scale;
@@ -423,16 +423,16 @@ dec_to_s(VALUE self)
     if (d == DEC_NaN) return rb_str_new2("NaN");
     if (d == DEC_PINF) return rb_str_new2("Infinity");
     if (d == DEC_NINF) return rb_str_new2("-Infinity");
-    if (d->inum == PZERO || d->inum == NZERO) {
-	const size_t HEAD_LEN = d->inum == PZERO ? 2U : 3U; /* "-0.".length */
+    if (d->inum == DEC_PZERO || d->inum == DEC_NZERO) {
+	const size_t HEAD_LEN = d->inum == DEC_PZERO ? 2U : 3U; /* "-0.".length */
 	long len = HEAD_LEN + d->scale;
 	char *buf;
 
 	/* FIXME: use "0eN" style when the scale is negative? */
 	if (d->scale <= 0) /* ignore the case of negative scale */
-	    return d->inum == PZERO ? rb_str_new2("0") : rb_str_new2("-0");
+	    return d->inum == DEC_PZERO ? rb_str_new2("0") : rb_str_new2("-0");
 	buf = xmalloc(len);
-	if (d->inum == PZERO)
+	if (d->inum == DEC_PZERO)
 	    memcpy(buf, "0.", HEAD_LEN);
 	else
 	    memcpy(buf, "-0.", HEAD_LEN);
@@ -523,10 +523,10 @@ dec_uminus(VALUE num)
 
     d2 = ALLOC(Decimal);
     d2->scale = d->scale;
-    if (d->inum == PZERO)
-	d2->inum = NZERO;
-    else if (d->inum == NZERO)
-	d2->inum = PZERO;
+    if (d->inum == DEC_PZERO)
+	d2->inum = DEC_NZERO;
+    else if (d->inum == DEC_NZERO)
+	d2->inum = DEC_PZERO;
     else
 	d2->inum = INUM_UMINUS(d->inum);
     return WrapDecimal(d2);
@@ -568,7 +568,7 @@ normal_plus(Decimal *x, Decimal *y, const int add)
 	else if (max == x) inum = INUM_MINUS(max->inum, min_inum);
 	else inum = INUM_MINUS(min_inum, max->inum);
     }
-    if (INUM_ZERO_P(inum)) inum = PZERO;
+    if (INUM_ZERO_P(inum)) inum = DEC_PZERO;
     z = ALLOC(Decimal);
     z->inum = inum;
     z->scale = scale;
@@ -614,7 +614,7 @@ dec_plus(VALUE x, VALUE y)
     }
     if (DEC_ZERO_P(a)) {
         if (!DEC_IMMEDIATE_P(b) && DEC_ZERO_P(b)) { /* XXX */
-            if (a->inum == NZERO && b->inum == NZERO)
+            if (a->inum == DEC_NZERO && b->inum == DEC_NZERO)
                 return dec_nzero(); /* FIXME: scale policy for 0? */
             return dec_pzero(); /* FIXME: ditto */
         }
@@ -726,7 +726,7 @@ dec_mul(VALUE x, VALUE y)
     if (DEC_ZERO_P(a)) {
 	if (DEC_ISINF(b)) return VALUE_NaN;
 	if (DEC_ZERO_P(b))  {
-	    return a->inum == PZERO ? y : dec_uminus(y);
+	    return a->inum == DEC_PZERO ? y : dec_uminus(y);
 	}
 	if (INUM_NEGATIVE_P(b->inum)) return dec_uminus(x);
 	return x;
@@ -834,7 +834,7 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     /* return Decimal */
     d2 = ALLOC(Decimal);
     if (INUM_ZERO_P(inum)) {
-	d2->inum = negative ? NZERO : PZERO;
+	d2->inum = negative ? DEC_NZERO : DEC_PZERO;
 	d2->scale = 0;
     }
     else {
@@ -952,8 +952,8 @@ dec_divide(int argc, VALUE *argv, VALUE x)
     /* TODO: can be optimized if b == 0, 1 or -1 */
     if (DEC_ISINF(a)) {
 	if (DEC_ISINF(b)) return VALUE_NaN;
-	if (b->inum == PZERO) return x;
-	if (b->inum == NZERO) return dec_uminus(x);
+	if (b->inum == DEC_PZERO) return x;
+	if (b->inum == DEC_NZERO) return dec_uminus(x);
 	return INUM_NEGATIVE_P(b->inum) ? dec_uminus(x) : x;
     }
     if (DEC_ZERO_P(a)) {
@@ -969,7 +969,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	return dec_nzero();
     }
     if (DEC_ZERO_P(b)) {
-	if (INUM_NEGATIVE_P(a->inum) == (b->inum == NZERO)) {
+	if (INUM_NEGATIVE_P(a->inum) == (b->inum == DEC_NZERO)) {
 	    return VALUE_PINF;
 	}
 	return VALUE_NINF;
@@ -1003,10 +1003,10 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	div = ALLOC(Decimal);
 	div->scale = 0;
 	if (b == DEC_NINF || (b != DEC_PINF && INUM_NEGATIVE_P(b->inum))) {
-	    div->inum = NZERO;
+	    div->inum = DEC_NZERO;
 	}
 	else {
-	    div->inum = PZERO;
+	    div->inum = DEC_PZERO;
 	}
 	mod = finite_dup(a);
     }
@@ -1020,7 +1020,7 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	    mod = b;
 	}
 	else {
-	    div->inum = a_negative ? NZERO : PZERO;
+	    div->inum = a_negative ? DEC_NZERO : DEC_PZERO;
  	    mod = finite_dup(a);
 	}
     }
@@ -1028,7 +1028,7 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	/* both of a and b are finite and nonzero */
 	div = normal_divide(a, b, 0, ROUND_DOWN); /* div = x / y */
 	if (INUM_SPZERO_P(div->inum)) {
-	    if (INUM_NEGATIVE_P(b->inum)) div->inum = NZERO;
+	    if (INUM_NEGATIVE_P(b->inum)) div->inum = DEC_NZERO;
 	    mod = finite_dup(a);
 	}
 	else {
@@ -1199,8 +1199,8 @@ dec_pow(VALUE x, VALUE y)
 	return WrapDecimal(d);
     }
     if (a == DEC_NaN || l == 1) return x;
-    if (a == DEC_PINF || (a != DEC_NINF && a->inum == PZERO)) return x;
-    if (a == DEC_NINF || a->inum == NZERO)  {
+    if (a == DEC_PINF || (a != DEC_NINF && a->inum == DEC_PZERO)) return x;
+    if (a == DEC_NINF || a->inum == DEC_NZERO)  {
 	if (l % 2 == 0) {
 	    return a == DEC_NINF ? VALUE_PINF : dec_uminus(x);
 	}
@@ -1578,9 +1578,9 @@ dec_to_f(VALUE num)
 	f = 1.0 / 0.0;
     else if (d == DEC_NINF)
 	f = -1.0 / 0.0;
-    else if (d->inum == PZERO)
+    else if (d->inum == DEC_PZERO)
 	f = 0.0;
-    else if (d->inum == NZERO)
+    else if (d->inum == DEC_NZERO)
 	f = -0.0;
     else
 	f = normal_to_f(d);
@@ -1606,11 +1606,11 @@ dec_abs(VALUE num)
     if (d == DEC_NINF)
 	return VALUE_PINF;
     if (d == DEC_PINF || d == DEC_NaN ||
-        d->inum == PZERO || !INUM_NEGATIVE_P(d->inum)) {
+        d->inum == DEC_PZERO || !INUM_NEGATIVE_P(d->inum)) {
 	return num;
     }
     d2 = ALLOC(Decimal);
-    d2->inum = (d->inum == NZERO) ? PZERO : INUM_UMINUS(d->inum);
+    d2->inum = (d->inum == DEC_NZERO) ? DEC_PZERO : INUM_UMINUS(d->inum);
     d2->scale = d->scale;
     return WrapDecimal(d2);
 }
