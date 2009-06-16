@@ -2,7 +2,7 @@
  *  decimal.c - implementation of Decimal,
  *              a multi-precision decimal arithmetic library
  *
- *  Copyright (C) 2003-2008 Tadashi Saito
+ *  Copyright (C) 2003-2009 Tadashi Saito
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the Ruby License. See the file "COPYING" for
@@ -15,16 +15,28 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef HAVE_RUBY_RUBY_H /* expects Ruby 1.9 or later */
+#include <ruby/ruby.h>
+#include <ruby/util.h>
+#else
 #include <ruby.h>
 #include <rubysig.h>
-#include <version.h>
 #include <util.h>
+#include <version.h>
+#endif
+
+/* we need support both of 1.8/1.9 with the same source! */
+#include "ruby18compat.h"
 
 /*
  * unfortunately, few copies of Integer functions
  * are needed from original Ruby
  */
+#ifdef RUBY_VERSION /* expects Ruby 1.8 */ 
 #include "inum18.h"
+#else
+#include "inum19.h"
+#endif
 
 /*
  * INUM_* macros: receive both Fixnum and Bignum,
@@ -53,10 +65,11 @@
 #define INUM2STR(n) \
     (FIXNUM_P(n) ? rb_fix2str(n, 10) : rb_big2str(n, 10))
 
+/* implementation-independent INUM_* macros */
 #define INUM_INC(n) do { n = INUM_PLUS(n, INT2FIX(1)); } while (0)
 #define INUM_DEC(n) do { n = INUM_MINUS(n, INT2FIX(1)); } while (0)
 #define INUM_ZERO_P(n) (FIXNUM_P(n) && FIX2LONG(n) == 0)
-#define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : !RBIGNUM(n)->sign)
+#define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : !RBIGNUM_SIGN(n))
 #define INUM_BOTTOMDIG(n) (FIXNUM_P(n) ? FIX2LONG(n) % 10 : \
   !BIGZEROP(n) ? FIX2INT(RARRAY_PTR(rb_big_divmod(n, INT2FIX(10)))[1]) : 0)
 #define INUM_ODD_P(n) (FIXNUM_P(n) ? n & 2 : BDIGITS(n)[0] & 1)
@@ -187,7 +200,8 @@ cstr_to_dec(const char *str)
     if (ss = strchr(s, '.')) {
         const char *p;
 
-#if RUBY_RELEASE_CODE == 20070924 /* bug workaround for 1.8.6-p111 */
+#if defined(RUBY_RELEASE_CODE) && RUBY_RELEASE_CODE == 20070924
+	/* bug workaround for 1.8.6-p111 */
         if (ss == s || ss[-1] != '0') goto out;
         p = ss;
         do {
