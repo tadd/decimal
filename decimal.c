@@ -49,7 +49,7 @@
 #define INUM_MUL(a, b) \
     (FIXNUM_P(a) ? fix_mul(a, b) : rb_big_mul(a, b))
 #define INUM_DIV(a, b) \
-    (FIXNUM_P(a) ? fix_div(a, b) : RARRAY_PTR(rb_big_divmod(a, b))[0])
+    (FIXNUM_P(a) ? fix_div(a, b) : rb_big_div(a, b))
 #define INUM_DIVMOD(a, b) \
     (FIXNUM_P(a) ? fix_divmod(a, b) : rb_big_divmod(a, b))
 #define INUM_POW(a, b) \
@@ -59,20 +59,21 @@
 #define INUM_CMP(a, b) \
     (FIXNUM_P(a) ? fix_cmp(a, b) : rb_big_cmp(a, b))
 #define INUM_UMINUS(n) \
-    (FIXNUM_P(n) ? LONG2NUM(-FIX2LONG(n)) : big_uminus(n))
+    (FIXNUM_P(n) ? LONG2NUM(-FIX2LONG(n)) : rb_big_uminus(n))
 #define INUM_HASH(n) \
-    (FIXNUM_P(n) ? LONG2NUM((long)n) : rb_big_hash(n))
+    (FIXNUM_P(n) ? rb_obj_id(n) : rb_big_hash(n))
 #define INUM2STR(n) \
     (FIXNUM_P(n) ? rb_fix2str(n, 10) : rb_big2str(n, 10))
+#define INUM_ODD_P(n) \
+    (FIXNUM_P(n) ? fix_odd_p(n) : rb_big_odd_p(n))
 
 /* implementation-independent INUM_* macros */
 #define INUM_INC(n) do { n = INUM_PLUS(n, INT2FIX(1)); } while (0)
 #define INUM_DEC(n) do { n = INUM_MINUS(n, INT2FIX(1)); } while (0)
 #define INUM_ZERO_P(n) (FIXNUM_P(n) && FIX2LONG(n) == 0)
-#define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : !RBIGNUM_SIGN(n))
+#define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : RBIGNUM_NEGATIVE_P(n))
 #define INUM_BOTTOMDIG(n) (FIXNUM_P(n) ? FIX2LONG(n) % 10 : \
-  !BIGZEROP(n) ? FIX2INT(RARRAY_PTR(rb_big_divmod(n, INT2FIX(10)))[1]) : 0)
-#define INUM_ODD_P(n) (FIXNUM_P(n) ? n & 2 : BDIGITS(n)[0] & 1)
+    !BIGZEROP(n) ? FIX2INT(rb_big_modulo(n, INT2FIX(10))) : 0)
 
 /* the body */
 typedef struct {

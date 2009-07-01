@@ -1,5 +1,5 @@
 /*
- * Ruby's Integer part from ruby_1_8, r16008.
+ * Ruby's Integer part from ruby_1_8, r23740.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
@@ -78,7 +78,7 @@ rb_big_eq(VALUE x, VALUE y)
 }
 
 static VALUE
-big_uminus(VALUE x)
+rb_big_uminus(VALUE x)
 {
     VALUE z = rb_big_clone(x);
 
@@ -98,6 +98,16 @@ rb_big_hash(VALUE x)
 	key ^= *digits++;
     }
     return LONG2FIX(key);
+}
+
+/* specially, copied from ruby_1_9_1 */
+static VALUE
+rb_big_odd_p(VALUE num)
+{
+    if (BDIGITS(num)[0] & 1) {
+	return Qtrue;
+    }
+    return Qfalse;
 }
 
 /*
@@ -201,7 +211,7 @@ fix_div(VALUE x, VALUE y)
 	return LONG2NUM(div);
     }
     /* modified */
-    return RARRAY(rb_big_divmod(rb_int2big(FIX2LONG(x)), y))->ptr[0];
+    return rb_big_div(rb_int2big(FIX2LONG(x)), y);
 }
 
 static VALUE
@@ -246,7 +256,7 @@ int_pow(long x, unsigned long y)
 	    long xz = x * z;
 	    if (!POSFIXABLE(xz) || xz / x != z) {
 		goto bignum;
-	    }
+ 	    }
 	    z = xz;
 	}
     } while (--y);
@@ -288,7 +298,7 @@ fix_pow(VALUE x, VALUE y)
     if (a == 0) return INT2FIX(0);
     if (a == 1) return INT2FIX(1);
     if (a == -1) {
-        if ((BDIGITS(y)[0] & 1) == 0) return INT2FIX(1); /* modified */
+        if (!rb_big_odd_p(y)) return INT2FIX(1); /* modified */
         else return INT2FIX(-1);
     }
     x = rb_int2big(FIX2LONG(x));
@@ -316,4 +326,13 @@ fix_cmp(VALUE x, VALUE y)
     else {
 	return rb_big_cmp(rb_int2big(FIX2LONG(x)), y); /* modified */
     }
+}
+
+static VALUE
+fix_odd_p(VALUE num)
+{
+    if (num & 2) {
+        return Qtrue;
+    }
+    return Qfalse;
 }
