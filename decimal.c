@@ -616,7 +616,7 @@ dec_plus(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, '+');
     }
     GetDecimal(x, a);
     if (a == DEC_NaN) return VALUE_NaN;
@@ -667,7 +667,7 @@ dec_minus(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, '-');
     }
     GetDecimal(x, a);
     if (a == DEC_NaN) return VALUE_NaN;
@@ -726,7 +726,7 @@ dec_mul(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, '*');
     }
     GetDecimal(x, a);
     if (a == DEC_NaN) return VALUE_NaN;
@@ -961,7 +961,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("devide"));
     }
     /* TODO: can be optimized if b == 0, 1 or -1 */
     if (DEC_ISINF(a)) {
@@ -1084,7 +1084,7 @@ dec_idiv(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("idiv"));
     }
     GetDecimal(x, a);
     divmod(a, b, &div, NULL);
@@ -1121,7 +1121,7 @@ dec_mod(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("mod"));
     }
     GetDecimal(x, a);
     divmod(a, b, NULL, &mod);
@@ -1163,7 +1163,7 @@ dec_divmod(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("divmod"));
     }
     GetDecimal(x, a);
     divmod(a, b, &div, &mod);
@@ -1295,7 +1295,7 @@ dec_eq(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_cmp(x, y);
+	return rb_num_coerce_cmp(x, y, rb_intern("=="));
     }
     return cmp(a, b) == 0 ? Qtrue : Qfalse;
 }
@@ -1330,7 +1330,7 @@ dec_cmp(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_cmp(x, y);
+	return rb_num_coerce_cmp(x, y, rb_intern("<=>"));
     }
     return INT2FIX(cmp(a, b));
 }
@@ -1364,7 +1364,7 @@ dec_gt(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, '>');
     }
     return cmp(a, b) > 0 ? Qtrue : Qfalse;
 }
@@ -1398,7 +1398,7 @@ dec_ge(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, rb_intern(">="));
     }
     return cmp(a, b) >= 0 ? Qtrue : Qfalse;
 }
@@ -1432,7 +1432,7 @@ dec_lt(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, '<');
     }
     return cmp(a, b) < 0 ? Qtrue : Qfalse;
 }
@@ -1466,7 +1466,7 @@ dec_le(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, rb_intern("<="));
     }
     return cmp(a, b) <= 0 ? Qtrue : Qfalse;
 }
