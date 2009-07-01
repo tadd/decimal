@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef HAVE_RUBY_RUBY_H /* expects Ruby 1.9 or later */
+#ifdef HAVE_RUBY_RUBY_H
 #include <ruby/ruby.h>
 #include <ruby/util.h>
 #else
