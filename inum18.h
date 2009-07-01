@@ -5,7 +5,7 @@
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
  * held by matz and other contributors:
  *
- * Copyright (C) 1993-2008 Yukihiro Matsumoto
+ * Copyright (C) 1993-2009 Yukihiro Matsumoto
  *   
  */
 
