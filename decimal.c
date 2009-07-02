@@ -15,11 +15,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef HAVE_RUBY_RUBY_H
-#include <ruby/ruby.h>
+#include <ruby.h>
+#ifdef HAVE_RUBY_UTIL_H
 #include <ruby/util.h>
 #else
-#include <ruby.h>
 #include <rubysig.h>
 #include <util.h>
 #include <version.h>
