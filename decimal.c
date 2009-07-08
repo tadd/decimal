@@ -1607,8 +1607,8 @@ dec_abs(VALUE num)
     GetDecimal(num, d);
     if (d == DEC_NINF)
 	return VALUE_PINF;
-    if (d == DEC_PINF || d == DEC_NaN ||
-        d->inum == DEC_PZERO || !INUM_NEGATIVE_P(d->inum)) {
+    if (d == DEC_PINF || d == DEC_NaN || d->inum == DEC_PZERO ||
+	(d->inum != DEC_NZERO && !INUM_NEGATIVE_P(d->inum))) {
 	return num;
     }
     d2 = ALLOC(Decimal);

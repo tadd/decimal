@@ -177,4 +177,12 @@ class TestDecimal < Test::Unit::TestCase
     assert_not_equal(ONE.hash, Decimal("1.0").hash)
     assert_not_equal(ZERO.hash, Decimal("0.0").hash)
   end
+
+  def test_abs
+    assert_equal(Decimal(-1).abs, ONE)
+    assert_equal(Decimal(-(2**64)).abs, 2**64)
+    assert(Decimal("-0").abs.eql?(ZERO))
+    assert_equal((-INFINITY).abs, INFINITY)
+    assert_not_equal(NaN.abs, NaN)
+  end
 end
