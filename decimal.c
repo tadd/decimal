@@ -200,18 +200,6 @@ cstr_to_dec(const char *str)
     if (ss = strchr(s, '.')) {
         const char *p;
 
-#if defined(RUBY_RELEASE_CODE) && RUBY_RELEASE_CODE == 20070924
-	/* bug workaround for 1.8.6-p111 */
-        if (ss == s || ss[-1] != '0') goto out;
-        p = ss;
-        do {
-            p--;
-        } while (*p == '0' && p > s);
-        if (*p == '0' || *p == '-' || *p == '+' || ISSPACE(*p))
-            *ss = '0';
-        else
-  out:
-#endif
         *ss = '_'; /* so that rb_cstr_to_inum() can ignore '.' */
         for (p = ss + 1; ISDIGIT(*p) || *p == '_'; p++) {
             if (ISDIGIT(*p)) scale++;
