@@ -2,7 +2,7 @@
  *  decimal.c - implementation of Decimal,
  *              a multi-precision decimal arithmetic library
  *
- *  Copyright (C) 2003-2008 Tadashi Saito
+ *  Copyright (C) 2003-2009 Tadashi Saito
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the Ruby License. See the file "COPYING" for
@@ -16,15 +16,26 @@
 #include <string.h>
 
 #include <ruby.h>
+#ifdef HAVE_RUBY_UTIL_H
+#include <ruby/util.h>
+#else
 #include <rubysig.h>
-#include <version.h>
 #include <util.h>
+#include <version.h>
+#endif
+
+/* we need support both of 1.8/1.9 with the same source! */
+#include "ruby18compat.h"
 
 /*
  * unfortunately, few copies of Integer functions
  * are needed from original Ruby
  */
+#ifdef RUBY_VERSION /* expects Ruby 1.8 */ 
 #include "inum18.h"
+#else
+#include "inum19.h"
+#endif
 
 /*
  * INUM_* macros: receive both Fixnum and Bignum,
@@ -37,7 +48,7 @@
 #define INUM_MUL(a, b) \
     (FIXNUM_P(a) ? fix_mul(a, b) : rb_big_mul(a, b))
 #define INUM_DIV(a, b) \
-    (FIXNUM_P(a) ? fix_div(a, b) : RARRAY_PTR(rb_big_divmod(a, b))[0])
+    (FIXNUM_P(a) ? fix_div(a, b) : rb_big_div(a, b))
 #define INUM_DIVMOD(a, b) \
     (FIXNUM_P(a) ? fix_divmod(a, b) : rb_big_divmod(a, b))
 #define INUM_POW(a, b) \
@@ -47,19 +58,21 @@
 #define INUM_CMP(a, b) \
     (FIXNUM_P(a) ? fix_cmp(a, b) : rb_big_cmp(a, b))
 #define INUM_UMINUS(n) \
-    (FIXNUM_P(n) ? LONG2NUM(-FIX2LONG(n)) : big_uminus(n))
+    (FIXNUM_P(n) ? LONG2NUM(-FIX2LONG(n)) : rb_big_uminus(n))
 #define INUM_HASH(n) \
-    (FIXNUM_P(n) ? LONG2NUM((long)n) : rb_big_hash(n))
+    (FIXNUM_P(n) ? rb_obj_id(n) : rb_big_hash(n))
 #define INUM2STR(n) \
     (FIXNUM_P(n) ? rb_fix2str(n, 10) : rb_big2str(n, 10))
+#define INUM_ODD_P(n) \
+    (FIXNUM_P(n) ? fix_odd_p(n) : rb_big_odd_p(n))
 
+/* implementation-independent INUM_* macros */
 #define INUM_INC(n) do { n = INUM_PLUS(n, INT2FIX(1)); } while (0)
 #define INUM_DEC(n) do { n = INUM_MINUS(n, INT2FIX(1)); } while (0)
 #define INUM_ZERO_P(n) (FIXNUM_P(n) && FIX2LONG(n) == 0)
-#define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : !RBIGNUM(n)->sign)
+#define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : RBIGNUM_NEGATIVE_P(n))
 #define INUM_BOTTOMDIG(n) (FIXNUM_P(n) ? FIX2LONG(n) % 10 : \
-  !BIGZEROP(n) ? FIX2INT(RARRAY_PTR(rb_big_divmod(n, INT2FIX(10)))[1]) : 0)
-#define INUM_ODD_P(n) (FIXNUM_P(n) ? n & 2 : BDIGITS(n)[0] & 1)
+    !BIGZEROP(n) ? FIX2INT(rb_big_modulo(n, INT2FIX(10))) : 0)
 
 /* the body */
 typedef struct {
@@ -187,7 +200,8 @@ cstr_to_dec(const char *str)
     if (ss = strchr(s, '.')) {
         const char *p;
 
-#if RUBY_RELEASE_CODE == 20070924 /* bug workaround for 1.8.6-p111 */
+#if defined(RUBY_RELEASE_CODE) && RUBY_RELEASE_CODE == 20070924
+	/* bug workaround for 1.8.6-p111 */
         if (ss == s || ss[-1] != '0') goto out;
         p = ss;
         do {
@@ -602,7 +616,7 @@ dec_plus(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, '+');
     }
     GetDecimal(x, a);
     if (a == DEC_NaN) return VALUE_NaN;
@@ -653,7 +667,7 @@ dec_minus(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, '-');
     }
     GetDecimal(x, a);
     if (a == DEC_NaN) return VALUE_NaN;
@@ -712,7 +726,7 @@ dec_mul(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, '*');
     }
     GetDecimal(x, a);
     if (a == DEC_NaN) return VALUE_NaN;
@@ -947,7 +961,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("devide"));
     }
     /* TODO: can be optimized if b == 0, 1 or -1 */
     if (DEC_ISINF(a)) {
@@ -1070,7 +1084,7 @@ dec_idiv(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("idiv"));
     }
     GetDecimal(x, a);
     divmod(a, b, &div, NULL);
@@ -1107,7 +1121,7 @@ dec_mod(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("mod"));
     }
     GetDecimal(x, a);
     divmod(a, b, NULL, &mod);
@@ -1149,7 +1163,7 @@ dec_divmod(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y);
+	return rb_num_coerce_bin(x, y, rb_intern("divmod"));
     }
     GetDecimal(x, a);
     divmod(a, b, &div, &mod);
@@ -1281,7 +1295,7 @@ dec_eq(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_cmp(x, y);
+	return rb_num_coerce_cmp(x, y, rb_intern("=="));
     }
     return cmp(a, b) == 0 ? Qtrue : Qfalse;
 }
@@ -1316,7 +1330,7 @@ dec_cmp(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_cmp(x, y);
+	return rb_num_coerce_cmp(x, y, rb_intern("<=>"));
     }
     return INT2FIX(cmp(a, b));
 }
@@ -1350,7 +1364,7 @@ dec_gt(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, '>');
     }
     return cmp(a, b) > 0 ? Qtrue : Qfalse;
 }
@@ -1384,7 +1398,7 @@ dec_ge(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, rb_intern(">="));
     }
     return cmp(a, b) >= 0 ? Qtrue : Qfalse;
 }
@@ -1418,7 +1432,7 @@ dec_lt(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, '<');
     }
     return cmp(a, b) < 0 ? Qtrue : Qfalse;
 }
@@ -1452,7 +1466,7 @@ dec_le(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_relop(x, y);
+	return rb_num_coerce_relop(x, y, rb_intern("<="));
     }
     return cmp(a, b) <= 0 ? Qtrue : Qfalse;
 }

@@ -1,5 +1,5 @@
 /*
- * Ruby's Integer part from ruby_1_8, r23740.
+ * Ruby's Integer part from ruby_1_9_1, r23803.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
@@ -13,76 +13,28 @@
  * copied from bignum.c
  */
 
-#define BDIGITS(x) ((BDIGIT*)RBIGNUM(x)->digits)
-#define BIGZEROP(x) (RBIGNUM(x)->len == 0 || \
+#define BDIGITS(x) (RBIGNUM_DIGITS(x))
+#define BIGZEROP(x) (RBIGNUM_LEN(x) == 0 || \
 		     (BDIGITS(x)[0] == 0 && \
-		      (RBIGNUM(x)->len == 1 || bigzero_p(x))))
+		      (RBIGNUM_LEN(x) == 1 || bigzero_p(x))))
 
 static int
 bigzero_p(VALUE x)
 {
     long i;
-    for (i = 0; i < RBIGNUM(x)->len; ++i) {
-       if (BDIGITS(x)[i]) return 0;
+    for (i = RBIGNUM_LEN(x) - 1; 0 <= i; i--) {
+	if (BDIGITS(x)[i]) return 0;
     }
     return 1;
 }
 
-static VALUE
-rb_big_cmp(VALUE x, VALUE y)
-{
-    long xlen = RBIGNUM(x)->len;
-
-    switch (TYPE(y)) {
-      case T_FIXNUM:
-	y = rb_int2big(FIX2LONG(y));
-	break;
-
-      case T_BIGNUM:
-	break;
-
-      default:
-	rb_bug("rb_big_cmp(): not reached"); /* modified */
-    }
-
-    if (RBIGNUM(x)->sign > RBIGNUM(y)->sign) return INT2FIX(1);
-    if (RBIGNUM(x)->sign < RBIGNUM(y)->sign) return INT2FIX(-1);
-    if (xlen < RBIGNUM(y)->len)
-	return (RBIGNUM(x)->sign) ? INT2FIX(-1) : INT2FIX(1);
-    if (xlen > RBIGNUM(y)->len)
-	return (RBIGNUM(x)->sign) ? INT2FIX(1) : INT2FIX(-1);
-
-    while(xlen-- && (BDIGITS(x)[xlen]==BDIGITS(y)[xlen]));
-    if (-1 == xlen) return INT2FIX(0);
-    return (BDIGITS(x)[xlen] > BDIGITS(y)[xlen]) ?
-	(RBIGNUM(x)->sign ? INT2FIX(1) : INT2FIX(-1)) :
-	    (RBIGNUM(x)->sign ? INT2FIX(-1) : INT2FIX(1));
-}
-
-static VALUE
-rb_big_eq(VALUE x, VALUE y)
-{
-    switch (TYPE(y)) {
-      case T_FIXNUM:
-	y = rb_int2big(FIX2LONG(y));
-	break;
-      case T_BIGNUM:
-	break;
-      default:
-	rb_bug("rb_big_eq(): not reached"); /* modified */
-    }
-    if (RBIGNUM(x)->sign != RBIGNUM(y)->sign) return Qfalse;
-    if (RBIGNUM(x)->len != RBIGNUM(y)->len) return Qfalse;
-    if (MEMCMP(BDIGITS(x),BDIGITS(y),BDIGIT,RBIGNUM(y)->len) != 0) return Qfalse;
-    return Qtrue;
-}
 
 static VALUE
 rb_big_uminus(VALUE x)
 {
     VALUE z = rb_big_clone(x);
 
-    RBIGNUM(z)->sign = !RBIGNUM(x)->sign;
+    RBIGNUM_SET_SIGN(z, !RBIGNUM_SIGN(x));
 
     return rb_big_norm(z); /* modified to use exported one */
 }
@@ -90,17 +42,12 @@ rb_big_uminus(VALUE x)
 static VALUE
 rb_big_hash(VALUE x)
 {
-    long i, len, key;
-    BDIGIT *digits;
+    int hash;
 
-    key = 0; digits = BDIGITS(x); len = RBIGNUM(x)->len;
-    for (i=0; i<len; i++) {
-	key ^= *digits++;
-    }
-    return LONG2FIX(key);
+    hash = rb_memhash(BDIGITS(x), sizeof(BDIGIT)*RBIGNUM_LEN(x)) ^ RBIGNUM_SIGN(x);
+    return INT2FIX(hash);
 }
 
-/* specially, copied from ruby_1_9_1 */
 static VALUE
 rb_big_odd_p(VALUE num)
 {
@@ -145,33 +92,53 @@ fix_minus(VALUE x, VALUE y)
 
 	return r;
     }
-    return rb_big_minus(rb_int2big(FIX2LONG(x)), y); /* modified */
+    /* modified */
+    x = rb_int2big(FIX2LONG(x));    
+    return rb_big_minus(x, y);
 }
+
+#define SQRT_LONG_MAX ((SIGNED_VALUE)1<<((SIZEOF_LONG*CHAR_BIT-1)/2))
+/*tests if N*N would overflow*/
+#define FIT_SQRT_LONG(n) (((n)<SQRT_LONG_MAX)&&((n)>=-SQRT_LONG_MAX))
 
 static VALUE
 fix_mul(VALUE x, VALUE y)
 {
     if (FIXNUM_P(y)) {
 #ifdef __HP_cc
-        /* avoids an optimization bug of HP aC++/ANSI C B3910B A.06.05 [Jul 25 2005] */
-        volatile
+/* avoids an optimization bug of HP aC++/ANSI C B3910B A.06.05 [Jul 25 2005] */
+	volatile
 #endif
-	long a, b, c;
+	SIGNED_VALUE a, b;
+#if SIZEOF_VALUE * 2 <= SIZEOF_LONG_LONG
+	LONG_LONG d;
+#else
+	SIGNED_VALUE c;
 	VALUE r;
+#endif
 
 	a = FIX2LONG(x);
-	if (a == 0) return x;
-
 	b = FIX2LONG(y);
+
+#if SIZEOF_VALUE * 2 <= SIZEOF_LONG_LONG
+	d = (LONG_LONG)a * b;
+	if (FIXABLE(d)) return LONG2FIX(d);
+	return rb_ll2inum(d);
+#else
+	if (FIT_SQRT_LONG(a) && FIT_SQRT_LONG(b))
+	    return LONG2FIX(a*b);
 	c = a * b;
 	r = LONG2FIX(c);
 
+	if (a == 0) return x;
 	if (FIX2LONG(r) != c || c/a != b) {
 	    r = rb_big_mul(rb_int2big(a), rb_int2big(b));
 	}
 	return r;
+#endif
     }
-    return rb_big_mul(y, x); /* modified */
+    /* modified */
+    return rb_big_mul(y, x);
 }
 
 static void
@@ -201,6 +168,7 @@ fixdivmod(long x, long y, long *divp, long *modp)
     if (modp) *modp = mod;
 }
 
+/* extracted from fix_divide() */
 static VALUE
 fix_div(VALUE x, VALUE y)
 {
@@ -211,7 +179,8 @@ fix_div(VALUE x, VALUE y)
 	return LONG2NUM(div);
     }
     /* modified */
-    return rb_big_div(rb_int2big(FIX2LONG(x)), y);
+    x = rb_int2big(FIX2LONG(x));
+    return rb_big_div(x, y);
 }
 
 static VALUE
@@ -224,7 +193,9 @@ fix_divmod(VALUE x, VALUE y)
 
 	return rb_assoc_new(LONG2NUM(div), LONG2NUM(mod));
     }
-    return rb_big_divmod(rb_int2big(FIX2LONG(x)), y); /* modified */
+    /* modified */
+    x = rb_int2big(FIX2LONG(x));
+    return rb_big_divmod(x, y);
 }
 
 static VALUE
@@ -241,22 +212,21 @@ int_pow(long x, unsigned long y)
     y &= ~1;
     do {
 	while (y % 2 == 0) {
-	    long x2 = x * x;
-	    if (x2/x != x || !POSFIXABLE(x2)) {
+	    if (!FIT_SQRT_LONG(x)) {
 		VALUE v;
 	      bignum:
 		v = rb_big_pow(rb_int2big(x), LONG2NUM(y));
 		if (z != 1) v = rb_big_mul(rb_int2big(neg ? -z : z), v);
 		return v;
 	    }
-	    x = x2;
+	    x = x * x;
 	    y >>= 1;
 	}
 	{
 	    long xz = x * z;
 	    if (!POSFIXABLE(xz) || xz / x != z) {
 		goto bignum;
- 	    }
+	    }
 	    z = xz;
 	}
     } while (--y);
@@ -264,13 +234,19 @@ int_pow(long x, unsigned long y)
     return LONG2NUM(z);
 }
 
+static VALUE fix_odd_p(VALUE num);
+
 static VALUE
 fix_pow(VALUE x, VALUE y)
 {
+    /* static const double zero = 0.0; */
     long a = FIX2LONG(x);
 
     if (FIXNUM_P(y)) {
 	long b = FIX2LONG(y);
+
+	if (b < 0)
+	    return rb_funcall(rb_rational_raw1(x), rb_intern("**"), 1, y);
 
 	if (b == 0) return INT2FIX(1);
 	if (b == 1) return x;
@@ -287,19 +263,21 @@ fix_pow(VALUE x, VALUE y)
 	    else 
 		return INT2FIX(-1);
 	}
-	if (b > 0) {
-	    return int_pow(a, b);
-	}
-        /* modified */
-        rb_bug("fix_pow(): Float returned");
-	return Qnil;
+	return int_pow(a, b);
     }
-    /* modified to treat with Bignums only */
+    /* modified */
+    if (rb_funcall(y, '<', 1, INT2FIX(0)))
+      return rb_funcall(rb_rational_raw1(x), rb_intern("**"), 1, y);
+    
     if (a == 0) return INT2FIX(0);
     if (a == 1) return INT2FIX(1);
     if (a == -1) {
-        if (!rb_big_odd_p(y)) return INT2FIX(1); /* modified */
-        else return INT2FIX(-1);
+      /* modified */
+#define int_even_p(x) \
+      (FIXNUM_P(x) ? !fix_odd_p(x) : !rb_big_odd_p(x))
+      if (int_even_p(y)) return INT2FIX(1);
+#undef int_even_p
+      else return INT2FIX(-1);
     }
     x = rb_int2big(FIX2LONG(x));
     return rb_big_pow(x, y);
@@ -318,14 +296,11 @@ fix_cmp(VALUE x, VALUE y)
 {
     if (x == y) return INT2FIX(0);
     if (FIXNUM_P(y)) {
-	long a = FIX2LONG(x), b = FIX2LONG(y);
-
-	if (a > b) return INT2FIX(1);
+	if (FIX2LONG(x) > FIX2LONG(y)) return INT2FIX(1);
 	return INT2FIX(-1);
     }
-    else {
-	return rb_big_cmp(rb_int2big(FIX2LONG(x)), y); /* modified */
-    }
+    /* modified */
+    return rb_big_cmp(rb_int2big(FIX2LONG(x)), y);
 }
 
 static VALUE
