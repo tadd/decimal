@@ -1039,8 +1039,8 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	    xfree(tmp); /* XXX */
 	}
 	/* if ((mod < 0 && y > 0) || (mod > 0 && y < 0)) { */
-	if (INUM_NEGATIVE_P(mod->inum) != INUM_NEGATIVE_P(b->inum) &&
-            !INUM_SPZERO_P(mod->inum) && !INUM_SPZERO_P(b->inum)) {
+	if (!INUM_SPZERO_P(mod->inum) && !INUM_SPZERO_P(b->inum) &&
+            INUM_NEGATIVE_P(mod->inum) != INUM_NEGATIVE_P(b->inum)) {
 	    mod = normal_plus(mod, b, Qtrue); /*  mod += y; */
 	    INUM_DEC(div->inum); /* div -= 1; */
 	}

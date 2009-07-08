@@ -185,4 +185,35 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal((-INFINITY).abs, INFINITY)
     assert_not_equal(NaN.abs, NaN)
   end
+
+  def test_divmod
+    assert_equal([2, 3.5], 11.5.divmod(4))
+    assert_equal([-3, -0.5], 11.5.divmod(-4))
+    assert_equal([-3, 0.5], (-11.5).divmod(4))
+    assert_equal([2, -3.5], (-11.5).divmod(-4))
+  end
+
+  def test_div
+    assert_equal(1, Decimal(1).div(1))
+    assert_equal(2, Decimal("11.5").div(4))
+    assert_equal(-3, Decimal("11.5").div(-4))
+    assert_equal(-3, Decimal("-11.5").div(4))
+    assert_equal(2, Decimal("-11.5").div(-4))
+  end
+
+  def test_modulo
+    assert_equal(0, Decimal(1).modulo(1))
+    assert_equal(Decimal("3.5"), Decimal("11.5").modulo(4))
+    assert_equal(Decimal("-0.5"), Decimal("11.5").modulo(-4))
+    assert_equal(Decimal("0.5"), Decimal("-11.5").modulo(4))
+    assert_equal(Decimal("-3.5"), Decimal("-11.5").modulo(-4))
+  end
+
+  def test_remainder
+    assert_equal(0, Decimal(1).remainder(1))
+    assert_equal(Decimal("3.5"), Decimal("11.5").remainder(4))
+    assert_equal(Decimal("3.5"), Decimal("11.5").remainder(-4))
+    assert_equal(Decimal("-3.5"), Decimal("-11.5").remainder(4))
+    assert_equal(Decimal("-3.5"), Decimal("-11.5").remainder(-4))
+  end
 end
