@@ -219,9 +219,15 @@ class TestDecimal < Test::Unit::TestCase
 
   def test_to_f
     max, min = Float::MAX_10_EXP+10, Float::MIN_10_EXP-10
-    assert_equal(Decimal("1e#{max}").to_f, 1.0/0.0)
-    assert_equal(Decimal("-1e#{max}").to_f, -1.0/0.0)
-    assert_equal(Decimal("1e#{min}").to_f, 0.0)
-    assert_equal(Decimal("-1e#{min}").to_f, -0.0)
+    e = STDERR.dup
+    begin
+      STDERR.reopen("/dev/null")
+      assert_equal(Decimal("1e#{max}").to_f, 1.0/0.0)
+      assert_equal(Decimal("-1e#{max}").to_f, -1.0/0.0)
+      assert_equal(Decimal("1e#{min}").to_f, 0.0)
+      assert_equal(Decimal("-1e#{min}").to_f, -0.0)
+    ensure
+      STDERR.reopen(e)
+    end
   end
 end
