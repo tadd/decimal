@@ -216,4 +216,12 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(Decimal("-3.5"), Decimal("-11.5").remainder(4))
     assert_equal(Decimal("-3.5"), Decimal("-11.5").remainder(-4))
   end
+
+  def test_to_f
+    max, min = Float::MAX_10_EXP+10, Float::MIN_10_EXP-10
+    assert_equal(Decimal("1e#{max}").to_f, 1.0/0.0)
+    assert_equal(Decimal("-1e#{max}").to_f, -1.0/0.0)
+    assert_equal(Decimal("1e#{min}").to_f, 0.0)
+    assert_equal(Decimal("-1e#{min}").to_f, -0.0)
+  end
 end

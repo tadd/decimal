@@ -62,6 +62,35 @@ rb_big_odd_p(VALUE num)
  */
 
 static VALUE
+flo_to_s(VALUE flt)
+{
+    char buf[32];
+    double value = RFLOAT_VALUE(flt);
+    char *p, *e;
+
+    if (isinf(value))
+	return rb_usascii_str_new2(value < 0 ? "-Infinity" : "Infinity");
+    else if(isnan(value))
+	return rb_usascii_str_new2("NaN");
+
+    snprintf(buf, sizeof(buf), "%#.15g", value); /* ensure to print decimal point */
+    if (!(e = strchr(buf, 'e'))) {
+	e = buf + strlen(buf);
+    }
+    if (!ISDIGIT(e[-1])) { /* reformat if ended with decimal point (ex 111111111111111.) */
+	snprintf(buf, sizeof(buf), "%#.14e", value);
+	if (!(e = strchr(buf, 'e'))) {
+	    e = buf + strlen(buf);
+	}
+    }
+    p = e;
+    while (p[-1]=='0' && ISDIGIT(p[-2]))
+	p--;
+    memmove(p, e, strlen(e)+1);
+    return rb_usascii_str_new2(buf);
+}
+
+static VALUE
 fix_plus(VALUE x, VALUE y)
 {
     if (FIXNUM_P(y)) {

@@ -19,7 +19,6 @@
 #ifdef HAVE_RUBY_UTIL_H
 #include <ruby/util.h>
 #else
-#include <rubysig.h>
 #include <util.h>
 #include <version.h>
 #endif
@@ -57,6 +56,7 @@
     (FIXNUM_P(a) ? fix_equal(a, b) : rb_big_eq(a, b))
 #define INUM_CMP(a, b) \
     (FIXNUM_P(a) ? fix_cmp(a, b) : rb_big_cmp(a, b))
+#define INUM_GT(a, b) (FIX2INT(INUM_CMP(a, b)) > 0)
 #define INUM_UMINUS(n) \
     (FIXNUM_P(n) ? LONG2NUM(-FIX2LONG(n)) : rb_big_uminus(n))
 #define INUM_HASH(n) \
@@ -99,6 +99,16 @@ static const VALUE DEC_PZERO = 2, DEC_NZERO = 6;
 /* special signed zeros */
 #define DEC_ZERO_P(d) ((d)->inum == DEC_PZERO || (d)->inum == DEC_NZERO)
 #define INUM_SPZERO_P(n) ((n) == DEC_PZERO || (n) == DEC_NZERO)
+
+/* use internally in to_f */
+static Decimal *DEC_DBL_MIN = NULL, *DEC_DBL_MAX = NULL;
+static VALUE INUM_DBL_MAX = Qnil;
+#define GET_DEC_DBL_MAX() (DEC_DBL_MAX != NULL ? DEC_DBL_MAX : \
+			   (DEC_DBL_MAX = dbl_threshold_to_dec(DBL_MAX)))
+#define GET_DEC_DBL_MIN() (DEC_DBL_MIN != NULL ? DEC_DBL_MIN : \
+			   (DEC_DBL_MIN = dbl_threshold_to_dec(DBL_MIN)))
+#define GET_INUM_DBL_MAX() (INUM_DBL_MAX != Qnil ? INUM_DBL_MAX : \
+			    dbl_threshold_to_inum(DBL_MAX, &INUM_DBL_MAX))
 
 /*
  * all rounding modes used in Decimal#round, corresponding to
@@ -868,7 +878,7 @@ normal_divide(Decimal *x, Decimal *y, long scale, VALUE mode)
 }
 
 static int
-valid_rounding_mode(VALUE sym)
+valid_rounding_mode_p(VALUE sym)
 {
     if (sym == ROUND_CEILING ||
         sym == ROUND_DOWN ||
@@ -909,7 +919,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
     switch (argc) {
       case 3:
 	Check_Type(vmode, T_SYMBOL);
-	if (!valid_rounding_mode(vmode)) {
+	if (!valid_rounding_mode_p(vmode)) {
 	    rb_raise(rb_eArgError, "invalid rounding mode %s",
                      RSTRING_PTR(rb_inspect(vmode)));
 	}
@@ -1520,41 +1530,77 @@ dec_hash(VALUE x)
     return LONG2NUM(hash);
 }
 
-/* XXX: any other sane way? */
-#define QUIET(stmt) do { \
-    RUBY_CRITICAL( \
-    const VALUE verbose = ruby_verbose; \
-    ruby_verbose = Qnil; \
-    stmt; \
-    ruby_verbose = verbose; \
-    ); \
-} while (0)
+static Decimal *
+dbl_threshold_to_dec(double threshold)
+{
+    VALUE v = flo_to_s(rb_float_new(threshold));
+    Decimal *d = cstr_to_dec(StringValueCStr(v));
+
+    if (!IMMEDIATE_P(d->inum)) {
+	rb_global_variable(&d->inum);
+    }
+    return d;
+}
+
+static VALUE
+dbl_threshold_to_inum(double threshold, VALUE *val)
+{
+    const double f = floor(threshold);
+
+    if (FIXABLE(f)) {
+	return *val = LONG2FIX((long)f);
+    }
+    rb_global_variable(val);
+    return *val = rb_dbl2big(f);
+}
+
+static int
+out_of_double_range_p(Decimal *d, double *f)
+{
+    Decimal *d_abs;
+    int negative, out_of_range = Qfalse;
+
+    if (!INUM_NEGATIVE_P(d->inum)) {
+	negative = Qfalse;
+	d_abs = d;
+    }
+    else {
+	negative = Qtrue;
+	d_abs = ALLOC(Decimal);
+	d_abs->inum = INUM_UMINUS(d->inum);
+	d_abs->scale = d->scale;
+    }
+    if (normal_cmp(d_abs, GET_DEC_DBL_MIN()) < 0) { /* too small */
+	*f = negative ? -0.0 : 0.0;
+	out_of_range = Qtrue;
+    }
+    else if (normal_cmp(d_abs, GET_DEC_DBL_MAX()) > 0) { /* too big */
+	*f = negative ? -1.0 / 0.0 : 1.0 / 0.0;
+	out_of_range = Qtrue;
+    }
+    if (d_abs != d) xfree(d_abs);
+    return out_of_range;
+}
 
 static double
 normal_to_f(Decimal *d)
 {
     double f;
 
-    if (d->scale == 0) QUIET(f = NUM2DBL(d->inum));
-    else if (d->scale < 0) {
-	VALUE n;
-
-	n = inum_lshift(d->inum, -d->scale);
-	QUIET(f = NUM2DBL(n));
+    if (d->scale <= 0) {
+	f = NUM2DBL(d->inum) * pow(10.0, -d->scale);
     }
-    else {
-	/* FIXME: more strict handling needed for huge value */
-	double divf;
-	VALUE div;
+    else { /* NUM2DBL() may warn */
+	const int negative = INUM_NEGATIVE_P(d->inum);
+	long scale = d->scale;
+	VALUE inum_abs = negative ? INUM_UMINUS(d->inum) : d->inum;
 
-	QUIET(f = NUM2DBL(d->inum));
-	div = inum_lshift(INT2FIX(1), d->scale);
-	QUIET(divf = NUM2DBL(div));
-	f /= divf;
-    }
-    if (isinf(f)) {
-	rb_warn("Decimal out of Float range");
-	f = HUGE_VAL;
+	while (INUM_GT(inum_abs, GET_INUM_DBL_MAX())) {
+	    inum_abs = INUM_DIV(inum_abs, INT2FIX(10));
+	    scale--;
+	}
+	f = NUM2DBL(inum_abs) / pow(10.0, scale); /* scale may be negative */
+	if (negative) f = -f;
     }
     return f;
 }
@@ -1584,6 +1630,8 @@ dec_to_f(VALUE num)
 	f = 0.0;
     else if (d->inum == DEC_NZERO)
 	f = -0.0;
+    else if (out_of_double_range_p(d, &f))
+	rb_warn("Decimal out of Float range");
     else
 	f = normal_to_f(d);
 
@@ -1748,7 +1796,7 @@ dec_round(int argc, VALUE *argv, VALUE x)
     switch (argc) {
       case 2:
 	Check_Type(mode, T_SYMBOL);
-	if (!valid_rounding_mode(mode)) {
+	if (!valid_rounding_mode_p(mode)) {
 	    rb_raise(rb_eArgError, "invalid rounding mode %s",
                      RSTRING_PTR(rb_inspect(mode)));
 	}
