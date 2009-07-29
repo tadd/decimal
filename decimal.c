@@ -1631,7 +1631,7 @@ dec_to_f(VALUE num)
     else if (d->inum == DEC_NZERO)
 	f = -0.0;
     else if (out_of_double_range_p(d, &f))
-	rb_warn("Decimal out of Float range");
+	rb_warning("Decimal out of Float range");
     else
 	f = normal_to_f(d);
 
