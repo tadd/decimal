@@ -352,8 +352,7 @@ dec_strip_trailing_zeros(VALUE self)
 	d2->scale = 0;
 	return WrapDecimal(d2);
     }
-    d2 = ALLOC(Decimal);
-    *d2 = *d;
+    d2 = finite_dup(d);
     /* TODO: can be optimized with dividing each part
      * for Bignums and Fixnums */
     while (INUM_BOTTOMDIG(d2->inum) == 0) {
