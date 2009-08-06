@@ -997,9 +997,6 @@ dec_div(VALUE x, VALUE y)
 }
 #endif
 
-/*
- * FIXME: test needed!
- */
 static void
 divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 {

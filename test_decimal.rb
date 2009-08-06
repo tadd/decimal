@@ -108,14 +108,6 @@ class TestDecimal < Test::Unit::TestCase
     assert_raise(TypeError) {Decimal(11) % 4.0}
   end
 
-  def test_divmod
-    assert_equal([2, Decimal("3.5")], Decimal("11.5").divmod(4))
-    assert_equal([-3, Decimal("-0.5")], Decimal("11.5").divmod(-4))
-    assert_equal([-3, Decimal("0.5")], Decimal("-11.5").divmod(4))
-    assert_equal([2, Decimal("-3.5")], Decimal("-11.5").divmod(-4))
-    assert_raise(TypeError) {Decimal(11).divmod(4.0)}
-  end
-
   def test_pow
     assert_equal(1 << 10, Decimal(2) ** 10)
     assert_equal(1, ONE ** 10)
@@ -187,10 +179,11 @@ class TestDecimal < Test::Unit::TestCase
   end
 
   def test_divmod
-    assert_equal([2, 3.5], 11.5.divmod(4))
-    assert_equal([-3, -0.5], 11.5.divmod(-4))
-    assert_equal([-3, 0.5], (-11.5).divmod(4))
-    assert_equal([2, -3.5], (-11.5).divmod(-4))
+    assert_equal([2, Decimal("3.5")], Decimal("11.5").divmod(4))
+    assert_equal([-3, Decimal("-0.5")], Decimal("11.5").divmod(-4))
+    assert_equal([-3, Decimal("0.5")], Decimal("-11.5").divmod(4))
+    assert_equal([2, Decimal("-3.5")], Decimal("-11.5").divmod(-4))
+    assert_raise(TypeError) {Decimal(11).divmod(4.0)}
   end
 
   def test_div
