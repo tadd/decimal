@@ -1865,11 +1865,8 @@ dec_finite_p(VALUE num)
 static VALUE
 dec_infinite_p(VALUE num)
 {
-    Decimal *d;
-
-    GetDecimal(num, d);
-    if (d == DEC_PINF) return INT2FIX(1);
-    if (d == DEC_NINF) return INT2FIX(-1);
+    if (num == VALUE_PINF) return INT2FIX(1);
+    if (num == VALUE_NINF) return INT2FIX(-1);
     return Qnil;
 }
 
