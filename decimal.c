@@ -1828,10 +1828,7 @@ dec_round(int argc, VALUE *argv, VALUE x)
 static VALUE
 dec_nan_p(VALUE num)
 {
-    Decimal *d;
-
-    GetDecimal(num, d);
-    return d == DEC_NaN ? Qtrue : Qfalse;
+    return num == VALUE_NaN;
 }
 
 /*
