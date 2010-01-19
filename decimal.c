@@ -1265,7 +1265,7 @@ cmp(Decimal *x, Decimal *y)
  *
  *     Decimal(1) == 1                #=> true
  *     Decimal(1) == Decimal("1.0")   #=> true
- *     Decimal(1) == 1.0              #=> nil
+ *     Decimal(1) == 1.0              #=> false
  */
 static VALUE
 dec_eq(VALUE x, VALUE y)
@@ -1280,7 +1280,7 @@ dec_eq(VALUE x, VALUE y)
 	b = inum_to_dec(y);
 	break;
       case T_FLOAT:
-	return Qnil;
+	return Qfalse;
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
@@ -1289,7 +1289,7 @@ dec_eq(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_cmp(x, y, rb_intern("=="));
+	return RTEST(rb_num_coerce_cmp(x, y, rb_intern("==")));
     }
     return cmp(a, b) == 0 ? Qtrue : Qfalse;
 }
