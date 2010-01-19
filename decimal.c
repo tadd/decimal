@@ -937,8 +937,8 @@ dec_divide(int argc, VALUE *argv, VALUE x)
       case T_FIXNUM:
         l = FIX2LONG(y);
         if (l == 0) {
-            if (DEC_ZERO_P(a)) return VALUE_NaN;
             if (DEC_ISINF(a)) return x;
+            if (DEC_ZERO_P(a)) return VALUE_NaN;
             return INUM_NEGATIVE_P(a->inum) ? VALUE_NINF : VALUE_PINF;
         }
         else if (l == 1) return x;
