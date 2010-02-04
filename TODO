@@ -1,0 +1,25 @@
+* Implement webpages seriously!!
+* Preservae scale of zeros
+* Implement Math functions
+* Implement "decimal/compat/bigdecimal", a bigdecimal-compatible layer
+* Implement decimal ** otherdecimal, decimal ** -integer
+  (with Decimal#power(other, scale=decimal.scale, mode=Decimal::ROUND_XXX))
+* Be a good friend with other Numeric classes (using Kernel.autoload?)
+  - OtherNumerics#to_d, Decimal#to_*
+* Define `marshal_dump' and `marshal_load'
+
+* Implement Decimal.pi / Decimal.e with a precise option
+* Decimal#format_s based on format of Excel
+* Embeded decimal32/64 (that size equals to pointer's)
+* GMP support with "--with-gmp" and inumgmp.h
+* Static value for well-used value like 0, 1 or 10 ?
+
+done:
+- Support RubyGems
+- Support Ruby 1.9
+- Implement NaN/+-Infinity as a singletion object
+- Write tests
+- Write RDocs
+- Implement decimal ** fixnum 
+- Create .document
+
