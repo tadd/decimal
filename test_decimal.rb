@@ -130,8 +130,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_not_equal(ONE, 2**32)
     assert_not_equal(ONE, NaN)
     assert_not_equal(ONE, nil)
-
-    assert_nil(ONE == 1.0)
+    assert_not_equal(ONE, 1.0)
   end
 
   def test_cmp
