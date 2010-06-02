@@ -1870,65 +1870,6 @@ dec_infinite_p(VALUE num)
     return Qnil;
 }
 
-
-/* Mathematical part */
-static VALUE mMath;
-
-/* :nodoc: */
-static VALUE
-math_pi(int argc, VALUE *argv, VALUE module_unused)
-{
-    VALUE scale, scale_plus, mode;
-    VALUE pi, k, t, u;
-    VALUE argv1[3], argv2[3]; /* for divide */
-    VALUE argv_round[2];
-    
-    rb_scan_args(argc, argv, "11", &scale, &mode);
-    if (argc == 1) {
-	mode = ROUND_DOWN;
-    }
-    scale_plus = LONG2NUM(FIX2LONG(scale) + 1);
-    argv1[1] = argv2[1] = scale_plus;
-    argv1[2] = argv2[2] = ROUND_DOWN;
-
-    pi = f_decimal(cDecimal, INT2FIX(0));
-
-    k = INT2FIX(1);
-    t = f_decimal(cDecimal, INT2FIX(-80));
-    argv1[0] = INT2FIX(-25); /* [0] is divider */
-    for (;;) {
-	t = dec_divide(3, argv1, t);
-	argv2[0] = k;
-	u = dec_divide(3, argv2, t);
-	if (dec_zero_p(u)) break;
-	pi = dec_plus(pi, u);
-	k = INUM_PLUS(k, INT2FIX(2));
-    }
-
-    k = INT2FIX(1);
-    t = f_decimal(cDecimal, INT2FIX(956));
-    argv1[0] = INT2FIX(-57121);
-    for (;;) {
-	t = dec_divide(3, argv1, t);
-	argv2[0] = k;
-	u = dec_divide(3, argv2, t);
-	if (dec_zero_p(u)) break;
-	pi = dec_plus(pi, u);
-	k = INUM_PLUS(k, INT2FIX(2));
-    }
-    argv_round[0] = scale;
-    argv_round[1] = mode;
-    return dec_round(2, argv_round, pi);
-}
-
-static void
-init_math(void)
-{
-    mMath = rb_define_module_under(cDecimal, "Math");
-    rb_define_singleton_method(mMath, "pi", math_pi, -1);
-}
-
-
 /*
  *  +Decimal+ is a decimal fraction that holds exact number in the decimal
  *  system unlike +Float+.  It can hold multi-precision digits, so you can
@@ -2038,6 +1979,4 @@ Init_decimal(void)
     rb_define_method(cDecimal, "nan?", dec_nan_p, 0);
     rb_define_method(cDecimal, "finite?", dec_finite_p, 0);
     rb_define_method(cDecimal, "infinite?", dec_infinite_p, 0);
-
-    init_math();
 }
