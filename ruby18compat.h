@@ -1,5 +1,5 @@
 /*
- *  ruby18compat.c - write Ruby 1.8 compatible extention library
+ *  ruby18compat.h - write Ruby 1.8 compatible extention library
  *		     with 1.9 style
  *
  *  This program is under public domain.

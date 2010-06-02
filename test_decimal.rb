@@ -4,8 +4,8 @@ require 'test/unit'
 class TestDecimal < Test::Unit::TestCase
   ONE = Decimal(1)
   ZERO = Decimal(0)
-  INFINITY = ONE.divide(0)
-  NaN = Decimal(0).divide(0)
+  INFINITY = Decimal::INFINITY 
+  NAN = Decimal::NAN
   
   def test_initialize
     assert_nothing_raised {Decimal(1)}
@@ -28,7 +28,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("299792458", Decimal("2.99_792_458e8").to_s)
     assert_equal("Infinity", INFINITY.to_s)
     assert_equal("-Infinity", (-INFINITY).to_s)
-    assert_equal("NaN", NaN.to_s)
+    assert_equal("NaN", NAN.to_s)
 
     assert_equal("Decimal(1)", ONE.inspect)
     assert_equal("Decimal(1)", Decimal("1").inspect)
@@ -39,7 +39,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("Decimal(299792458)", Decimal("2.99_792_458e8").inspect)
     assert_equal("Decimal(Infinity)", INFINITY.inspect)
     assert_equal("Decimal(-Infinity)", (-INFINITY).inspect)
-    assert_equal("Decimal(NaN)", NaN.inspect)
+    assert_equal("Decimal(NaN)", NAN.inspect)
   end
 
   def test_coerce
@@ -55,7 +55,7 @@ class TestDecimal < Test::Unit::TestCase
     assert(ZERO.eql?(-Decimal("-0"))) # because `-0 == 0`
     assert(!ZERO.eql?(-ZERO))
     assert(!Decimal("-0").eql?(-Decimal("-0")))
-    assert_not_equal(-NaN, -NaN)
+    assert_not_equal(-NAN, -NAN)
     assert_equal(Decimal(-1).divide(0), -INFINITY)
     assert_equal(INFINITY, -(Decimal(-1).divide(0)))
   end
@@ -128,7 +128,7 @@ class TestDecimal < Test::Unit::TestCase
     assert(!ONE.eql?(Decimal("1.0")))
 
     assert_not_equal(ONE, 2**32)
-    assert_not_equal(ONE, NaN)
+    assert_not_equal(ONE, NAN)
     assert_not_equal(ONE, nil)
     assert_not_equal(ONE, 1.0)
   end
@@ -138,8 +138,8 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(1, ONE <=> ZERO)
     assert_equal(-1, ONE <=> Decimal(2))
     assert_nil(ONE <=> nil)
-    assert_nil(ONE <=> NaN)
-    assert_nil(NaN <=> ONE)
+    assert_nil(ONE <=> NAN)
+    assert_nil(NAN <=> ONE)
     assert_nil(ONE <=> 1.0)
 
     assert_equal(0, ONE <=> 1)
@@ -162,7 +162,7 @@ class TestDecimal < Test::Unit::TestCase
   def test_hash
     assert_equal(ONE.hash, ONE.hash)
     assert_equal(ZERO.hash, ZERO.hash)
-    assert_equal(NaN.hash, NaN.hash)
+    assert_equal(NAN.hash, NAN.hash)
     assert_equal(INFINITY.hash, INFINITY.hash)
 
     assert_not_equal(ONE.hash, Decimal("1.0").hash)
@@ -174,7 +174,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(Decimal(-(2**64)).abs, 2**64)
     assert(Decimal("-0").abs.eql?(ZERO))
     assert_equal((-INFINITY).abs, INFINITY)
-    assert_not_equal(NaN.abs, NaN)
+    assert_not_equal(NAN.abs, NAN)
   end
 
   def test_divmod
