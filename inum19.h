@@ -1,11 +1,11 @@
 /*
- * Ruby's Integer part from ruby_1_9_1, r23803.
+ * Ruby's Integer part from ruby_1_9_1, r27979.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
  * held by matz and other contributors:
  *
- * Copyright (C) 1993-2009 Yukihiro Matsumoto
+ * Copyright (C) 1993-2010 Yukihiro Matsumoto
  *   
  */
 
@@ -138,18 +138,18 @@ fix_mul(VALUE x, VALUE y)
 /* avoids an optimization bug of HP aC++/ANSI C B3910B A.06.05 [Jul 25 2005] */
 	volatile
 #endif
-	SIGNED_VALUE a, b;
-#if SIZEOF_VALUE * 2 <= SIZEOF_LONG_LONG
+	long a, b;
+#if SIZEOF_LONG * 2 <= SIZEOF_LONG_LONG
 	LONG_LONG d;
 #else
-	SIGNED_VALUE c;
+	long c;
 	VALUE r;
 #endif
 
 	a = FIX2LONG(x);
 	b = FIX2LONG(y);
 
-#if SIZEOF_VALUE * 2 <= SIZEOF_LONG_LONG
+#if SIZEOF_LONG * 2 <= SIZEOF_LONG_LONG
 	d = (LONG_LONG)a * b;
 	if (FIXABLE(d)) return LONG2FIX(d);
 	return rb_ll2inum(d);
