@@ -1,11 +1,11 @@
 /*
- * Ruby's Integer part from ruby_1_8, r23740.
+ * Ruby's Integer part from ruby_1_8, r27739.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
  * held by matz and other contributors:
  *
- * Copyright (C) 1993-2009 Yukihiro Matsumoto
+ * Copyright (C) 1993-2010 Yukihiro Matsumoto
  *   
  */
 
