@@ -1,7 +1,14 @@
 require "mkmf"
 
 (cflags = arg_config("--cflags")) && $CFLAGS << " #{cflags}"
-have_header "ruby/ruby.h" # to distiguish Ruby 1.8 from 1.9 with <version.h>
+version = if have_macro("RUBY_VERSION", "version.h")
+            "18"
+          elsif try_compile("int rb_str_hash(VALUE);")
+            "191"
+          else
+            "192"
+          end
+$CFLAGS << " -DINUM_SOURCE_FILE=" + %(\\"inum#{version}.h\\")
 have_func "rb_big_div"
 have_func "rb_big_modulo"
 have_func "rb_bigzero_p"

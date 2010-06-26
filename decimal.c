@@ -20,7 +20,6 @@
 #include <ruby/util.h>
 #else
 #include <util.h>
-#include <version.h>
 #endif
 
 /* we need support both of 1.8/1.9 with the same source! */
@@ -30,11 +29,7 @@
  * unfortunately, few copies of Integer functions
  * are needed from original Ruby
  */
-#ifdef RUBY_VERSION /* expects Ruby 1.8 */ 
-#include "inum18.h"
-#else
-#include "inum19.h"
-#endif
+#include INUM_SOURCE_FILE
 
 /*
  * INUM_* macros: receive both Fixnum and Bignum,

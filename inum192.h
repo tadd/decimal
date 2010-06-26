@@ -1,5 +1,5 @@
 /*
- * Ruby's Integer part from ruby_1_9_1, r27979.
+ * Ruby's Integer part from ruby_1_9_2, r28085.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
@@ -15,22 +15,8 @@
 
 #define BDIGITS(x) (RBIGNUM_DIGITS(x))
 
-#ifndef HAVE_RB_BIGZEROP
-#define rb_bigzero_p bigzero_p
-
-#define BIGZEROP(x) (RBIGNUM_LEN(x) == 0 || \
-		     (BDIGITS(x)[0] == 0 && \
-		      (RBIGNUM_LEN(x) == 1 || bigzero_p(x))))
-
-static int
-bigzero_p(VALUE x)
-{
-    long i;
-    for (i = RBIGNUM_LEN(x) - 1; 0 <= i; i--) {
-	if (BDIGITS(x)[i]) return 0;
-    }
-    return 1;
-}
+#ifndef HAVE_RB_BIGZERO_P
+#error Ruby 1.9.2 should have rb_bigzero_p()!
 #endif
 
 static VALUE
@@ -46,7 +32,7 @@ rb_big_uminus(VALUE x)
 static VALUE
 rb_big_hash(VALUE x)
 {
-    int hash;
+    st_index_t hash;
 
     hash = rb_memhash(BDIGITS(x), sizeof(BDIGIT)*RBIGNUM_LEN(x)) ^ RBIGNUM_SIGN(x);
     return INT2FIX(hash);
