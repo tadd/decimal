@@ -953,7 +953,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y, rb_intern("devide"));
+        return rb_num_coerce_bin(x, y, rb_intern("divide"));
     }
     /* TODO: can be optimized if b == 0, 1 or -1 */
     if (DEC_ISINF(a)) {
