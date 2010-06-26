@@ -14,6 +14,10 @@
  */
 
 #define BDIGITS(x) (RBIGNUM_DIGITS(x))
+
+#ifndef HAVE_RB_BIGZEROP
+#define rb_bigzero_p bigzero_p
+
 #define BIGZEROP(x) (RBIGNUM_LEN(x) == 0 || \
 		     (BDIGITS(x)[0] == 0 && \
 		      (RBIGNUM_LEN(x) == 1 || bigzero_p(x))))
@@ -27,7 +31,7 @@ bigzero_p(VALUE x)
     }
     return 1;
 }
-
+#endif
 
 static VALUE
 rb_big_uminus(VALUE x)

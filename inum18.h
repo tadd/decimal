@@ -1,5 +1,5 @@
 /*
- * Ruby's Integer part from ruby_1_8, r27739.
+ * Ruby's Integer part from ruby_1_8, r28324.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
@@ -14,6 +14,10 @@
  */
 
 #define BDIGITS(x) ((BDIGIT*)RBIGNUM(x)->digits)
+
+#ifndef HAVE_RB_BIGZEROP
+#define rb_bigzero_p bigzero_p
+
 #define BIGZEROP(x) (RBIGNUM(x)->len == 0 || \
 		     (BDIGITS(x)[0] == 0 && \
 		      (RBIGNUM(x)->len == 1 || bigzero_p(x))))
@@ -27,6 +31,7 @@ bigzero_p(VALUE x)
     }
     return 1;
 }
+#endif
 
 static VALUE
 rb_big_cmp(VALUE x, VALUE y)

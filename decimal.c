@@ -72,7 +72,7 @@
 #define INUM_ZERO_P(n) (FIXNUM_P(n) && FIX2LONG(n) == 0)
 #define INUM_NEGATIVE_P(n) (FIXNUM_P(n) ? FIX2LONG(n) < 0 : RBIGNUM_NEGATIVE_P(n))
 #define INUM_BOTTOMDIG(n) (FIXNUM_P(n) ? FIX2LONG(n) % 10 : \
-    !BIGZEROP(n) ? FIX2INT(rb_big_modulo(n, INT2FIX(10))) : 0)
+    !rb_bigzero_p(n) ? FIX2INT(rb_big_modulo(n, INT2FIX(10))) : 0)
 
 /* the body */
 typedef struct {
