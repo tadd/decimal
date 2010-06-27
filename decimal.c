@@ -2,7 +2,7 @@
  *  decimal.c - implementation of Decimal,
  *              a multi-precision decimal arithmetic library
  *
- *  Copyright (C) 2003-2009 Tadashi Saito
+ *  Copyright (C) 2003-2010 Tadashi Saito
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the Ruby License. See the file "COPYING" for
