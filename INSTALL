@@ -1,5 +1,4 @@
 $ ruby extconf.rb
 $ make
-$ su
-# make install
+$ sudo make install
 
