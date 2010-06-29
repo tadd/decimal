@@ -418,7 +418,7 @@ finite_to_s(Decimal *d)
  *
  *     Decimal(1).to_s             #=> "1"
  *     Decimal("1.1").to_s         #=> "1.1"
- *     Decimal(1).divide(0).to_s   #=> "Infinity"
+ *     Decimal::INFINITY.to_s   #=> "Infinity"
  */
 static VALUE
 dec_to_s(VALUE self)
@@ -456,7 +456,7 @@ dec_to_s(VALUE self)
  *
  *     Decimal(1).inspect             #=> "Decimal(1)"
  *     Decimal("1.1").inspect         #=> "Decimal(1.1)"
- *     Decimal(1).divide(0).inspect   #=> "Decimal(Infinity)"
+ *     Decimal::INFINITY.inspect   #=> "Decimal(Infinity)"
  */
 static VALUE
 dec_inspect(VALUE self)
