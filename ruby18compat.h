@@ -30,3 +30,21 @@
 #ifndef HAVE_RB_BIG_MODULO
 #define rb_big_modulo(x, y) (RARRAY_PTR(rb_big_divmod(x, y))[1])
 #endif
+
+#ifndef NAN
+#if BYTE_ORDER == LITTLE_ENDIAN
+static const unsigned char rb_nan[] = "\x00\x00\xc0\x7f";
+#else
+static const unsigned char rb_nan[] = "\x7f\xc0\x00\x00";
+#endif
+#define NAN (*(float *)rb_nan)
+#endif
+
+#ifndef INFINITY
+#if BYTE_ORDER == LITTLE_ENDIAN
+static const unsigned char rb_infinity[] = "\x00\x00\x80\x7f";
+#else
+static const unsigned char rb_infinity[] = "\x7f\x80\x00\x00";
+#endif
+#define INFINITY (*(float *)rb_infinity)
+#endif

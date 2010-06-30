@@ -11,6 +11,7 @@
 
 #include <ctype.h>
 #include <float.h>
+#define _ISOC99_SOURCE
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -1612,11 +1613,11 @@ dec_to_f(VALUE num)
 
     GetDecimal(num, d);
     if (d == DEC_NaN)
-	f = 0.0 / 0.0;
+	f = NAN;
     else if (d == DEC_PINF)
-	f = 1.0 / 0.0;
+	f = INFINITY;
     else if (d == DEC_NINF)
-	f = -1.0 / 0.0;
+	f = -INFINITY;
     else if (d->inum == DEC_PZERO)
 	f = 0.0;
     else if (d->inum == DEC_NZERO)
