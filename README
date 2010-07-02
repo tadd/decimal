@@ -1,0 +1,57 @@
+= Decimal - multi-precision decimal arithmetic library
+
+Decimal is (yet another) multi-precision decimal arithmetic library,
+which aims to surpass BigDecimal.  It provides simple, compact, fast,
+precise, stable and easy-to-use solution.
+
+== Webpages
+
+* {Home}[http://decimal.rubyforge.org/]
+* {Latest API Documents}[http://decimal.rubyforge.org/rdoc/]
+* {Project Page at RubyForge}[http://rubyforge.org/projects/decimal/]
+* {Mailing Lists}[http://rubyforge.org/mail/?group_id=1994]
+
+== Requirements
+
+Ruby 1.8.6 / 1.8.7 / 1.9.1 / 1.9.2dev (experimental)
+
+== Install
+
+With rubygems,
+
+  sudo gem install decimal
+
+or to build by yourself,
+
+  ruby extconf.rb
+  make
+  sudo make install
+
+Read INSTALL for less details.
+
+== Examples
+
+Use like Float with few exceptions including Decimal#divide.
+
+  require 'decimal'
+  
+  N = 3 # larger N may take huge time and more inaccurate result
+  pi = 0
+  i = 0
+  
+  loop do
+    term = (-1) ** i * Decimal(4).divide(2 * i + 1, N + 2, :down)
+    break if term.zero?
+    pi += term
+    i += 1
+  end
+  
+  puts pi.round(N)
+
+== License
+
+Ruby's.  See COPYING and GPL for more details.
+
+== Author
+
+{Tadashi Saito}[mailto:tad.a.digger(at)gmail.com]
