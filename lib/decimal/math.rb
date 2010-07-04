@@ -25,7 +25,7 @@ module Decimal::Math
 
   # copied from BigDecimal
   def cos(x, scale, rounding=:down)
-    return Decimal::NaN if x.infinite? or x.nan?
+    return Decimal::NAN if x.infinite? or x.nan?
     x = -x if x < 0
     x1 = 1
     x2 = x * x
