@@ -164,7 +164,6 @@ inum_to_dec(VALUE x)
 {
     Decimal *d = ALLOC(Decimal);
 
-    d = ALLOC(Decimal);
     if (INUM_ZERO_P(x)) d->inum = DEC_PZERO;
     else d->inum = x;
     d->scale = 0;
