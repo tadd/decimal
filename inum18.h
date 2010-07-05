@@ -16,8 +16,6 @@
 #define BDIGITS(x) ((BDIGIT*)RBIGNUM(x)->digits)
 
 #ifndef HAVE_RB_BIGZERO_P
-#define rb_bigzero_p bigzero_p
-
 #define BIGZEROP(x) (RBIGNUM(x)->len == 0 || \
 		     (BDIGITS(x)[0] == 0 && \
 		      (RBIGNUM(x)->len == 1 || bigzero_p(x))))
@@ -31,7 +29,13 @@ bigzero_p(VALUE x)
     }
     return 1;
 }
-#endif
+
+static int
+rb_bigzero_p(VALUE x)
+{
+    return BIGZEROP(x);
+}
+#endif /* !HAVE_RB_BIGZERO_P */
 
 static VALUE
 rb_big_cmp(VALUE x, VALUE y)
