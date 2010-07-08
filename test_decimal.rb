@@ -98,14 +98,19 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(-3, Decimal("-11.5").div(4))
     assert_equal(2, Decimal("-11.5").div(-4))
     assert_raise(TypeError) {Decimal(11).div(4.0)}
+    assert((Decimal::NAN.div(1)).nan?)
+    assert((Decimal(1).div(Decimal::NAN)).nan?)    
   end
 
   def test_mod
+    assert_equal(0, Decimal(1) % 1)
     assert_equal(Decimal("3.5"), Decimal("11.5") % 4)
     assert_equal(Decimal("-0.5"), Decimal("11.5") % -4)
     assert_equal(Decimal("0.5"), Decimal("-11.5") % 4)
     assert_equal(Decimal("-3.5"), Decimal("-11.5") % -4)
     assert_raise(TypeError) {Decimal(11) % 4.0}
+    assert((Decimal::NAN % 1).nan?)
+    assert((Decimal(1) % Decimal::NAN).nan?)    
   end
 
   def test_pow
@@ -183,6 +188,12 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal([-3, Decimal("0.5")], Decimal("-11.5").divmod(4))
     assert_equal([2, Decimal("-3.5")], Decimal("-11.5").divmod(-4))
     assert_raise(TypeError) {Decimal(11).divmod(4.0)}
+    div, mod = Decimal::NAN.divmod(1)
+    assert(div.nan?)
+    assert(mod.nan?)
+    div, mod = Decimal(1).divmod(Decimal::NAN)
+    assert(div.nan?)
+    assert(mod.nan?)
   end
 
   def test_div
@@ -191,14 +202,6 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(-3, Decimal("11.5").div(-4))
     assert_equal(-3, Decimal("-11.5").div(4))
     assert_equal(2, Decimal("-11.5").div(-4))
-  end
-
-  def test_modulo
-    assert_equal(0, Decimal(1).modulo(1))
-    assert_equal(Decimal("3.5"), Decimal("11.5").modulo(4))
-    assert_equal(Decimal("-0.5"), Decimal("11.5").modulo(-4))
-    assert_equal(Decimal("0.5"), Decimal("-11.5").modulo(4))
-    assert_equal(Decimal("-3.5"), Decimal("-11.5").modulo(-4))
   end
 
   def test_remainder

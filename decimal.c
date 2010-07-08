@@ -83,6 +83,13 @@ static Decimal *const DEC_NINF = (Decimal *)7;
 /* and their representation as Ruby objects */
 static VALUE VALUE_NaN, VALUE_PINF, VALUE_NINF;
 
+#define CHECK_NAN_WITH_VAL(v, retval) do { \
+    if (v == VALUE_NaN) return retval; } while (0)
+#define CHECK_NAN2_WITH_VAL(v1, v2, retval) do { \
+    if (v1 == VALUE_NaN || v2 == VALUE_NaN) return retval; } while (0)
+#define CHECK_NAN(v) CHECK_NAN_WITH_VAL(v, VALUE_NaN)
+#define CHECK_NAN2(v1, v2) CHECK_NAN2_WITH_VAL(v1, v2, VALUE_NaN)
+
 /* special constants - i.e. non-zero and non-fixnum */
 /* used for signed zeros that never meet any fixnums nor normal VALUEs */
 static const VALUE DEC_PZERO = 2, DEC_NZERO = 6;
@@ -425,8 +432,8 @@ dec_to_s(VALUE self)
 {
     Decimal *d;
 
+    CHECK_NAN_WITH_VAL(self, rb_str_new2("NaN"));
     GetDecimal(self, d);
-    if (d == DEC_NaN) return rb_str_new2("NaN");
     if (d == DEC_PINF) return rb_str_new2("Infinity");
     if (d == DEC_NINF) return rb_str_new2("-Infinity");
     if (d->inum == DEC_PZERO || d->inum == DEC_NZERO) {
@@ -522,8 +529,8 @@ dec_uminus(VALUE num)
 {
     Decimal *d, *d2;
 
+    CHECK_NAN(num);
     GetDecimal(num, d);
-    if (d == DEC_NaN) return num;
     if (d == DEC_PINF) return VALUE_NINF;
     if (d == DEC_NINF) return VALUE_PINF;
 
@@ -592,6 +599,7 @@ dec_plus(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2(x, y);
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -603,7 +611,6 @@ dec_plus(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return VALUE_NaN;
 	    break;
 	}
 	/* fall through */
@@ -611,7 +618,6 @@ dec_plus(VALUE x, VALUE y)
 	return rb_num_coerce_bin(x, y, '+');
     }
     GetDecimal(x, a);
-    if (a == DEC_NaN) return VALUE_NaN;
 
     /* now, x and y are not NaNs */
     if (DEC_ISINF(a)) {
@@ -643,6 +649,7 @@ dec_minus(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2(x, y);
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -654,7 +661,6 @@ dec_minus(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return VALUE_NaN;
 	    break;
 	}
 	/* fall through */
@@ -662,7 +668,6 @@ dec_minus(VALUE x, VALUE y)
 	return rb_num_coerce_bin(x, y, '-');
     }
     GetDecimal(x, a);
-    if (a == DEC_NaN) return VALUE_NaN;
 
     if (DEC_ISINF(a)) {
 	if (a == b) return VALUE_NaN;
@@ -701,6 +706,7 @@ dec_mul(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2(x, y);
     switch (TYPE(y)) {
       case T_FIXNUM:
         /* TODO: can be optimized if y = 0, 1 or -1 */
@@ -713,7 +719,6 @@ dec_mul(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return VALUE_NaN;
 	    break;
 	}
 	/* fall through */
@@ -721,7 +726,6 @@ dec_mul(VALUE x, VALUE y)
 	return rb_num_coerce_bin(x, y, '*');
     }
     GetDecimal(x, a);
-    if (a == DEC_NaN) return VALUE_NaN;
 
     if (DEC_ISINF(a)) {
 	if (DEC_ISINF(b)) return a == DEC_PINF ? y : dec_uminus(y);
@@ -906,8 +910,8 @@ dec_divide(int argc, VALUE *argv, VALUE x)
     long l, scale = 0; /* FIXME: dummy 0 */
     VALUE vscale, vmode;
 
+    CHECK_NAN(x);
     GetDecimal(x, a);
-    if (a == DEC_NaN) return VALUE_NaN; /* no need to check b */
 
     rb_scan_args(argc, argv, "12", &y, &vscale, &vmode);
     switch (argc) {
@@ -927,6 +931,7 @@ dec_divide(int argc, VALUE *argv, VALUE x)
 	    rb_raise(rb_eArgError, "scale number argument needed");
 	}
     }
+    CHECK_NAN(y);
 
     switch (TYPE(y)) {
       case T_FIXNUM:
@@ -948,7 +953,6 @@ dec_divide(int argc, VALUE *argv, VALUE x)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return VALUE_NaN;
 	    break;
 	}
 	/* fall through */
@@ -992,6 +996,7 @@ dec_div(VALUE x, VALUE y)
 }
 #endif
 
+/* never accepts NaN for a and b */
 static void
 divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 {
@@ -1059,6 +1064,7 @@ dec_idiv(VALUE x, VALUE y)
     Decimal *a, *b;
     VALUE div;
 
+    CHECK_NAN2(x, y);
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1096,6 +1102,7 @@ dec_mod(VALUE x, VALUE y)
     Decimal *a, *b;
     VALUE mod;
 
+    CHECK_NAN2(x, y);
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1138,6 +1145,7 @@ dec_divmod(VALUE x, VALUE y)
     Decimal *a, *b;
     VALUE div, mod;
 
+    CHECK_NAN2_WITH_VAL(x, y, rb_assoc_new(VALUE_NaN, VALUE_NaN));
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1190,6 +1198,7 @@ dec_pow(VALUE x, VALUE y)
     Decimal *a;
     long l;
 
+    CHECK_NAN(x);
     GetDecimal(x, a);
     Check_Type(y, T_FIXNUM);
     l = FIX2LONG(y);
@@ -1201,7 +1210,7 @@ dec_pow(VALUE x, VALUE y)
 	d->scale = 0;
 	return WrapDecimal(d);
     }
-    if (a == DEC_NaN || l == 1) return x;
+    if (l == 1) return x;
     if (a == DEC_PINF || (a != DEC_NINF && a->inum == DEC_PZERO)) return x;
     if (a == DEC_NINF || a->inum == DEC_NZERO)  {
 	if (l % 2 == 0) {
@@ -1267,8 +1276,8 @@ dec_eq(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2_WITH_VAL(x, y, Qfalse);
     GetDecimal(x, a);
-    if (a == DEC_NaN) return Qfalse;
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1279,7 +1288,6 @@ dec_eq(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return Qfalse;
 	    break;
 	}
 	/* fall through */
@@ -1302,8 +1310,8 @@ dec_cmp(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2_WITH_VAL(x, y, Qnil);
     GetDecimal(x, a);
-    if (a == DEC_NaN) return Qnil;
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1314,7 +1322,6 @@ dec_cmp(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return Qnil;
 	    break;
 	}
 	/* fall through */
@@ -1335,8 +1342,8 @@ dec_gt(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2_WITH_VAL(x, y, Qfalse);
     GetDecimal(x, a);
-    if (a == DEC_NaN) return Qfalse;
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1348,7 +1355,6 @@ dec_gt(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return Qfalse;
 	    break;
 	}
 	/* fall through */
@@ -1369,8 +1375,8 @@ dec_ge(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2_WITH_VAL(x, y, Qfalse);
     GetDecimal(x, a);
-    if (a == DEC_NaN) return Qfalse;
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1382,7 +1388,6 @@ dec_ge(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return Qfalse;
 	    break;
 	}
 	/* fall through */
@@ -1403,8 +1408,8 @@ dec_lt(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2_WITH_VAL(x, y, Qfalse);
     GetDecimal(x, a);
-    if (a == DEC_NaN) return Qfalse;
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1416,7 +1421,6 @@ dec_lt(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return Qfalse;
 	    break;
 	}
 	/* fall through */
@@ -1437,8 +1441,8 @@ dec_le(VALUE x, VALUE y)
 {
     Decimal *a, *b;
 
+    CHECK_NAN2_WITH_VAL(x, y, Qfalse);
     GetDecimal(x, a);
-    if (a == DEC_NaN) return Qfalse;
     switch (TYPE(y)) {
       case T_FIXNUM:
       case T_BIGNUM:
@@ -1450,7 +1454,6 @@ dec_le(VALUE x, VALUE y)
       case T_DATA:
 	if (DECIMAL_P(y)) {
 	    GetDecimal(y, b);
-	    if (b == DEC_NaN) return Qfalse;
 	    break;
 	}
 	/* fall through */
@@ -1480,9 +1483,9 @@ dec_eql(VALUE x, VALUE y)
     if (TYPE(y) != T_DATA || !DECIMAL_P(y))
 	return Qfalse;
 
+    CHECK_NAN2_WITH_VAL(x, y, Qfalse);
     GetDecimal(x, a);
     GetDecimal(y, b);
-    if (a == DEC_NaN || b == DEC_NaN) return Qfalse;
     if (DEC_ISINF(a) || DEC_ISINF(b))
 	return a == b ? Qtrue : Qfalse;
 
@@ -1610,10 +1613,9 @@ dec_to_f(VALUE num)
     Decimal *d;
     double f;
 
+    CHECK_NAN_WITH_VAL(num, rb_float_new(NAN));
     GetDecimal(num, d);
-    if (d == DEC_NaN)
-	f = NAN;
-    else if (d == DEC_PINF)
+    if (d == DEC_PINF)
 	f = INFINITY;
     else if (d == DEC_NINF)
 	f = -INFINITY;
@@ -1643,10 +1645,11 @@ dec_abs(VALUE num)
 {
     Decimal *d, *d2;
 
+    CHECK_NAN(num);
     GetDecimal(num, d);
     if (d == DEC_NINF)
 	return VALUE_PINF;
-    if (d == DEC_PINF || d == DEC_NaN || d->inum == DEC_PZERO ||
+    if (d == DEC_PINF || d->inum == DEC_PZERO ||
 	(d->inum != DEC_NZERO && !INUM_NEGATIVE_P(d->inum))) {
 	return num;
     }
@@ -1840,10 +1843,10 @@ dec_nan_p(VALUE num)
 static VALUE
 dec_finite_p(VALUE num)
 {
-    Decimal *d;
-
-    GetDecimal(num, d);
-    return !DEC_IMMEDIATE_P(d) ? Qtrue : Qfalse;
+    if (num != VALUE_PINF && num != VALUE_NINF && num != VALUE_NaN) {
+	return Qtrue;
+    }
+    return Qfalse;
 }
 
 /*
