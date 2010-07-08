@@ -1119,7 +1119,7 @@ dec_mod(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y, rb_intern("mod"));
+	return rb_num_coerce_bin(x, y, '%');
     }
     GetDecimal(x, a);
     divmod(a, b, NULL, &mod);
