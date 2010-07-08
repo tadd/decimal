@@ -728,7 +728,7 @@ dec_mul(VALUE x, VALUE y)
     GetDecimal(x, a);
 
     if (DEC_ISINF(a)) {
-	if (DEC_ISINF(b)) return a == DEC_PINF ? y : dec_uminus(y);
+	if (DEC_ISINF(b)) return x == y ? VALUE_PINF : VALUE_NINF;
 	if (DEC_ZERO_P(b)) return VALUE_NaN;
 	if (!INUM_NEGATIVE_P(b->inum)) return x;
 	return dec_uminus(x);
@@ -959,12 +959,13 @@ dec_divide(int argc, VALUE *argv, VALUE x)
       default:
         return rb_num_coerce_bin(x, y, rb_intern("divide"));
     }
-    /* TODO: can be optimized if b == 0, 1 or -1 */
+
     if (DEC_ISINF(a)) {
+	#define NEGATE_INF(x) ((x) == VALUE_PINF ? VALUE_NINF : VALUE_PINF)
 	if (DEC_ISINF(b)) return VALUE_NaN;
 	if (b->inum == DEC_PZERO) return x;
-	if (b->inum == DEC_NZERO) return dec_uminus(x);
-	return INUM_NEGATIVE_P(b->inum) ? dec_uminus(x) : x;
+	if (b->inum == DEC_NZERO) return NEGATE_INF(x);
+	return INUM_NEGATIVE_P(b->inum) ? NEGATE_INF(x) : x;
     }
     if (DEC_ZERO_P(a)) {
 	if (b == DEC_PINF) return x;
@@ -1200,7 +1201,6 @@ dec_pow(VALUE x, VALUE y)
     long l;
 
     CHECK_NAN(x);
-    GetDecimal(x, a);
     Check_Type(y, T_FIXNUM);
     l = FIX2LONG(y);
     if (l < 0) rb_raise(rb_eArgError, "in a**b, b should be positive integer");
@@ -1212,12 +1212,15 @@ dec_pow(VALUE x, VALUE y)
 	return WrapDecimal(d);
     }
     if (l == 1) return x;
-    if (a == DEC_PINF || (a != DEC_NINF && a->inum == DEC_PZERO)) return x;
-    if (a == DEC_NINF || a->inum == DEC_NZERO)  {
-	if (l % 2 == 0) {
-	    return a == DEC_NINF ? VALUE_PINF : dec_uminus(x);
-	}
-	return x;
+
+    if (x == VALUE_PINF) return x;
+    if (x == VALUE_NINF) {
+	return l % 2 == 0 ? VALUE_PINF : VALUE_NINF;
+    }
+    GetDecimal(x, a);
+    if (a->inum == DEC_PZERO) return x;
+    if (a->inum == DEC_NZERO) {
+	return l % 2 == 0 ? dec_uminus(x) : x;
     }
     return power_with_fixnum(a, y);
 }
@@ -1615,12 +1618,13 @@ dec_to_f(VALUE num)
     double f;
 
     CHECK_NAN_WITH_VAL(num, rb_float_new(NAN));
+    if (num == VALUE_PINF)
+	return rb_float_new(INFINITY);
+    if (num == VALUE_NINF)
+	return rb_float_new(-INFINITY);
+
     GetDecimal(num, d);
-    if (d == DEC_PINF)
-	f = INFINITY;
-    else if (d == DEC_NINF)
-	f = -INFINITY;
-    else if (d->inum == DEC_PZERO)
+    if (d->inum == DEC_PZERO)
 	f = 0.0;
     else if (d->inum == DEC_NZERO)
 	f = -0.0;
@@ -1647,10 +1651,10 @@ dec_abs(VALUE num)
     Decimal *d, *d2;
 
     CHECK_NAN(num);
-    GetDecimal(num, d);
-    if (d == DEC_NINF)
+    if (num == VALUE_PINF || num == VALUE_NINF)
 	return VALUE_PINF;
-    if (d == DEC_PINF || d->inum == DEC_PZERO ||
+    GetDecimal(num, d);
+    if (d->inum == DEC_PZERO ||
 	(d->inum != DEC_NZERO && !INUM_NEGATIVE_P(d->inum))) {
 	return num;
     }
