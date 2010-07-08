@@ -433,9 +433,9 @@ dec_to_s(VALUE self)
     Decimal *d;
 
     CHECK_NAN_WITH_VAL(self, rb_str_new2("NaN"));
+    if (self == VALUE_PINF) return rb_str_new2("Infinity");
+    if (self == VALUE_NINF) return rb_str_new2("-Infinity");
     GetDecimal(self, d);
-    if (d == DEC_PINF) return rb_str_new2("Infinity");
-    if (d == DEC_NINF) return rb_str_new2("-Infinity");
     if (d->inum == DEC_PZERO || d->inum == DEC_NZERO) {
 	const size_t HEAD_LEN = d->inum == DEC_PZERO ? 2U : 3U; /* "-0.".length */
 	long len = HEAD_LEN + d->scale;
@@ -530,10 +530,10 @@ dec_uminus(VALUE num)
     Decimal *d, *d2;
 
     CHECK_NAN(num);
-    GetDecimal(num, d);
-    if (d == DEC_PINF) return VALUE_NINF;
-    if (d == DEC_NINF) return VALUE_PINF;
+    if (num == VALUE_PINF) return VALUE_NINF;
+    if (num == VALUE_NINF) return VALUE_PINF;
 
+    GetDecimal(num, d);
     d2 = ALLOC(Decimal);
     d2->scale = d->scale;
     if (d->inum == DEC_PZERO)
@@ -1003,9 +1003,10 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
     Decimal *div, *mod;
     Decimal *tmp;
 
-    if (a == DEC_NaN || DEC_ISINF(a) || b == DEC_NaN ||
-	(!DEC_ISINF(b) && DEC_ZERO_P(b))) {
-	div = mod = DEC_NaN;
+    if (DEC_ISINF(a) || (!DEC_ISINF(b) && DEC_ZERO_P(b))) {
+	if (divp) *divp = VALUE_NaN;
+	if (modp) *modp = VALUE_NaN;
+	return;
     }
     else if (INUM_SPZERO_P(a->inum)) {
 	div = ALLOC(Decimal);
