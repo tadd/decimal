@@ -1081,7 +1081,7 @@ dec_idiv(VALUE x, VALUE y)
 	}
 	/* fall through */
       default:
-	return rb_num_coerce_bin(x, y, rb_intern("idiv"));
+	return rb_num_coerce_bin(x, y, rb_intern("div"));
     }
     GetDecimal(x, a);
     divmod(a, b, &div, NULL);
