@@ -93,10 +93,11 @@ static VALUE VALUE_NaN, VALUE_PINF, VALUE_NINF;
 /* special constants - i.e. non-zero and non-fixnum */
 /* used for signed zeros that never meet any fixnums nor normal VALUEs */
 static const VALUE DEC_PZERO = 2, DEC_NZERO = 6;
-#define dec_pzero() WrapDecimal(inum_to_dec(DEC_PZERO))
-#define dec_nzero() WrapDecimal(inum_to_dec(DEC_NZERO))
+#define dec_pzero(scale) WrapDecimal(dec_raw_new(DEC_PZERO, scale))
+#define dec_nzero(scale) WrapDecimal(dec_raw_new(DEC_NZERO, scale))
 
 #define DEC_ISINF(d) ((d) == DEC_PINF || (d) == DEC_NINF)
+#define DEC_VALUE_ISINF(v) ((v) == VALUE_PINF || (v) == VALUE_NINF)
 /* immediate means non-finite */
 #define DEC_IMMEDIATE_P(d) (DEC_ISINF(d) || (d) == DEC_NaN)
 /* special signed zeros */
@@ -586,6 +587,7 @@ normal_plus(Decimal *x, Decimal *y, const int add)
     return dec_raw_new(inum, scale);
 }
 
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
 /*
  *  call-seq:
  *     dec + other   => decimal
@@ -615,23 +617,37 @@ dec_plus(VALUE x, VALUE y)
       default:
 	return rb_num_coerce_bin(x, y, '+');
     }
-    GetDecimal(x, a);
 
-    /* now, x and y are not NaNs */
-    if (DEC_ISINF(a)) {
-	if (DEC_ISINF(b) && a != b) return VALUE_NaN;
+    if (DEC_VALUE_ISINF(x)) {
+	if (DEC_VALUE_ISINF(y) && x != y) return VALUE_NaN;
 	return x;
     }
+    if (DEC_VALUE_ISINF(y)) return y;
+    /* now, x and y are not NaN nor +-INFINITY */
+    GetDecimal(x, a);
     if (DEC_ZERO_P(a)) {
-        if (!DEC_IMMEDIATE_P(b) && DEC_ZERO_P(b)) { /* XXX */
+	VALUE inum;
+
+        if (DEC_ZERO_P(b)) {
+	    const long scale = MAX(a->scale, b->scale);
+
             if (a->inum == DEC_NZERO && b->inum == DEC_NZERO)
-                return dec_nzero(); /* FIXME: scale policy for 0? */
-            return dec_pzero(); /* FIXME: ditto */
+		return dec_nzero(scale);
+            return dec_pzero(scale);
         }
-        return y;
+	if (a->scale <= b->scale)
+	    return y;
+	inum = inum_lshift(b->inum, a->scale - b->scale);
+	return WrapDecimal(dec_raw_new(inum, a->scale));
     }
-    if (DEC_ISINF(b)) return y;
-    if (DEC_ZERO_P(b)) return x; /* FIXME: ditto */
+    if (DEC_ZERO_P(b)) {
+	VALUE inum;
+	
+	if (a->scale >= b->scale)
+	    return x;
+	inum = inum_lshift(a->inum, b->scale - a->scale);
+	return WrapDecimal(dec_raw_new(inum, b->scale));
+    }
     /* "true" means addition */
     return WrapDecimal(normal_plus(a, b, Qtrue));
 }
@@ -673,7 +689,8 @@ dec_minus(VALUE x, VALUE y)
     }
     if (DEC_ZERO_P(a)) { /* FIXME: need to refactor */
 	if (!DEC_ISINF(b) && DEC_ZERO_P(b) && a->inum == b->inum) {
-	    return dec_pzero(); /* FIXME: for scaling */
+	     /* FIXME: UNDER CONSTRUCTION for scaling */
+	    return dec_pzero(MAX(a->scale, b->scale));
 	}
 	return dec_uminus(y);
     }
@@ -965,9 +982,9 @@ dec_divide(int argc, VALUE *argv, VALUE x)
     }
     if (DEC_ISINF(b)) {
 	if (INUM_NEGATIVE_P(a->inum) == (b == DEC_NINF)) {
-	    return dec_pzero();
+	    return dec_pzero(0); /* FIXME for scaling */
 	}
-	return dec_nzero();
+	return dec_nzero(0); /* FIXME for scaling */
     }
     if (DEC_ZERO_P(b)) {
 	if (INUM_NEGATIVE_P(a->inum) == (b->inum == DEC_NZERO)) {
