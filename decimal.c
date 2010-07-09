@@ -1649,7 +1649,7 @@ dec_abs(VALUE num)
     VALUE inum;
 
     CHECK_NAN(num);
-    if (num == VALUE_PINF || num == VALUE_NINF)
+    if (DEC_VALUE_ISINF(num))
 	return VALUE_PINF;
     GetDecimal(num, d);
     if (d->inum == DEC_PZERO ||
