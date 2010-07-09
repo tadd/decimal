@@ -48,3 +48,8 @@ static const unsigned char rb_infinity[] = "\x7f\x80\x00\x00";
 #endif
 #define INFINITY (*(float *)rb_infinity)
 #endif
+
+#ifndef HAVE_RB_USASCII_STR_NEW
+#define rb_usascii_str_new rb_str_new
+#define rb_usascii_str_new_cstr rb_str_new2
+#endif

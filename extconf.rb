@@ -12,5 +12,6 @@ $CFLAGS << " -DINUM_SOURCE_FILE=" + %(\\"inum#{version}.h\\")
 have_func "rb_big_div"
 have_func "rb_big_modulo"
 have_func "rb_bigzero_p"
+have_func "rb_usascii_str_new"
 
 create_makefile "decimal"

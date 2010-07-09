@@ -412,7 +412,7 @@ finite_to_s(Decimal *d)
 	memcpy(ss2+diff, s, snumlen);
     }
   coda:
-    newstr = rb_str_new(ss, sslen);
+    newstr = rb_usascii_str_new(ss, sslen);
     xfree(ss);
     return newstr;
 }
@@ -434,9 +434,9 @@ dec_to_s(VALUE self)
 {
     Decimal *d;
 
-    CHECK_NAN_WITH_VAL(self, rb_str_new2("NaN"));
-    if (self == VALUE_PINF) return rb_str_new2("Infinity");
-    if (self == VALUE_NINF) return rb_str_new2("-Infinity");
+    CHECK_NAN_WITH_VAL(self, rb_usascii_str_new_cstr("NaN"));
+    if (self == VALUE_PINF) return rb_usascii_str_new_cstr("Infinity");
+    if (self == VALUE_NINF) return rb_usascii_str_new_cstr("-Infinity");
     GetDecimal(self, d);
     if (DEC_ZERO_P(d)) {
 	const size_t HEAD_LEN = d->inum == DEC_PZERO ? 2U : 3U; /* "-0.".length */
@@ -445,14 +445,15 @@ dec_to_s(VALUE self)
 
 	/* FIXME: use "0eN" style when the scale is negative? */
 	if (d->scale <= 0) /* ignore the case of negative scale */
-	    return d->inum == DEC_PZERO ? rb_str_new2("0") : rb_str_new2("-0");
+	    return d->inum == DEC_PZERO ?
+	      rb_usascii_str_new_cstr("0") : rb_usascii_str_new_cstr("-0");
 	buf = xmalloc(len);
 	if (d->inum == DEC_PZERO)
 	    memcpy(buf, "0.", HEAD_LEN);
 	else
 	    memcpy(buf, "-0.", HEAD_LEN);
 	memset(buf + HEAD_LEN, '0', d->scale);
-	return rb_str_new(buf, len);
+	return rb_usascii_str_new(buf, len);
     }
     return finite_to_s(d);
 }
@@ -478,7 +479,7 @@ dec_inspect(VALUE self)
     len = 9 + RSTRING_LEN(str); /* 9 == strlen("Decimal()") */
     s = ALLOC_N(char, len + 1); /* +1 for NUL */
     sprintf(s, "Decimal(%s)", RSTRING_PTR(str));
-    newstr = rb_str_new(s, len);
+    newstr = rb_usascii_str_new(s, len);
     xfree(s);
     return newstr;
 }
