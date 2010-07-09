@@ -165,15 +165,20 @@ dec_free(void *p)
 }
 #endif
 
-static Decimal *
-inum_to_dec(VALUE x)
+static inline Decimal *
+dec_raw_new(VALUE inum, long scale)
 {
     Decimal *d = ALLOC(Decimal);
 
-    if (INUM_ZERO_P(x)) d->inum = DEC_PZERO;
-    else d->inum = x;
-    d->scale = 0;
+    d->inum = inum;
+    d->scale = scale;
     return d;
+}
+
+static Decimal *
+inum_to_dec(VALUE x)
+{
+    return dec_raw_new(INUM_ZERO_P(x) ? DEC_PZERO : x, 0);
 }
 
 static VALUE
@@ -195,7 +200,6 @@ invalid_str(VALUE arg)
 static Decimal *
 cstr_to_dec(const char *str)
 {
-    Decimal *d;
     char *const s = strdup(str);
     char *ss;
     long scale = 0;
@@ -217,26 +221,25 @@ cstr_to_dec(const char *str)
         }
     }
     inum = rb_rescue(cstr_to_inum, (VALUE)s, invalid_str, (VALUE)assoc);
-    d = ALLOC(Decimal);
     if (INUM_ZERO_P(inum)) {
-        d->inum = strchr(s, '-') ? DEC_NZERO : DEC_PZERO;
+        inum = strchr(s, '-') ? DEC_NZERO : DEC_PZERO;
     }
-    else d->inum = inum;
-    d->scale = scale;
     xfree(s);
-    return d;
+    return dec_raw_new(inum, scale);
 }
 
 static Decimal *
 finite_dup(Decimal *d)
 {
-    Decimal *d2 = ALLOC(Decimal);
+    VALUE inum;
 
-    *d2 = *d;
-    if (!FIXNUM_P(d->inum) && !INUM_SPZERO_P(d->inum)) {
-        d2->inum = rb_big_clone(d->inum); /* inum is a Bignum */
+    if (FIXNUM_P(d->inum) || INUM_SPZERO_P(d->inum)) {
+        inum = d->inum;
     }
-    return d2;
+    else {
+        inum = rb_big_clone(d->inum); /* inum is a Bignum */
+    }
+    return dec_raw_new(inum, d->scale);
 }
 
 static Decimal *
@@ -526,22 +529,21 @@ dec_coerce(VALUE x, VALUE y)
 static VALUE
 dec_uminus(VALUE num)
 {
-    Decimal *d, *d2;
+    VALUE inum;
+    Decimal *d;
 
     CHECK_NAN(num);
     if (num == VALUE_PINF) return VALUE_NINF;
     if (num == VALUE_NINF) return VALUE_PINF;
 
     GetDecimal(num, d);
-    d2 = ALLOC(Decimal);
-    d2->scale = d->scale;
     if (d->inum == DEC_PZERO)
-	d2->inum = DEC_NZERO;
+	inum = DEC_NZERO;
     else if (d->inum == DEC_NZERO)
-	d2->inum = DEC_PZERO;
+	inum = DEC_PZERO;
     else
-	d2->inum = INUM_UMINUS(d->inum);
-    return WrapDecimal(d2);
+	inum = INUM_UMINUS(d->inum);
+    return WrapDecimal(dec_raw_new(inum, d->scale));
 }
 
 /* returns x * (10 ** n) */
@@ -559,7 +561,6 @@ inum_lshift(VALUE x, long n)
 static Decimal *
 normal_plus(Decimal *x, Decimal *y, const int add)
 {
-    Decimal *z;
     VALUE inum;
     long scale;
 
@@ -581,10 +582,7 @@ normal_plus(Decimal *x, Decimal *y, const int add)
 	else inum = INUM_MINUS(min_inum, max->inum);
     }
     if (INUM_ZERO_P(inum)) inum = DEC_PZERO;
-    z = ALLOC(Decimal);
-    z->inum = inum;
-    z->scale = scale;
-    return z;
+    return dec_raw_new(inum, scale);
 }
 
 /*
@@ -687,11 +685,7 @@ dec_minus(VALUE x, VALUE y)
 static Decimal *
 normal_mul(Decimal *x, Decimal *y)
 {
-    Decimal *z = ALLOC(Decimal);
-
-    z->inum = INUM_MUL(x->inum, y->inum);
-    z->scale = x->scale + y->scale;
-    return z;
+    return dec_raw_new(INUM_MUL(x->inum, y->inum), x->scale + y->scale);
 }
 
 /*
@@ -835,42 +829,38 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     }
   coda:
     if (negative) inum = INUM_UMINUS(inum);
-    if (scale <= 0 && inump) { /* return Integer */
+    if (scale <= 0 && inump) {
+	/* return Integer */
 	if (scale < 0) inum = inum_lshift(inum, -scale);
 	*inump = inum;
 	return NULL;
     }
     /* return Decimal */
-    d2 = ALLOC(Decimal);
     if (INUM_ZERO_P(inum)) {
-	d2->inum = negative ? DEC_NZERO : DEC_PZERO;
-	d2->scale = 0;
+	inum = negative ? DEC_NZERO : DEC_PZERO;
+	scale = 0;
     }
-    else {
-	d2->inum = inum;
-	d2->scale = scale;
-    }
-    return d2;
+    return dec_raw_new(inum, scale);
 }
 
 static Decimal *
 normal_divide(Decimal *x, Decimal *y, long scale, VALUE mode)
 {
-    long diff;
+    long diff, z_scale;
     VALUE xx;
-    Decimal *z = ALLOC(Decimal);
+    Decimal *z;
 
     diff = x->scale - y->scale;
     if (diff <= scale) {
 	xx = inum_lshift(x->inum, scale-diff+1); /* +1 for rounding */
-	z->scale = scale + 1;
+	z_scale = scale + 1;
     }
     else {
 	/* FIXME: may be a bug...? */
 	xx = x->inum;
-	z->scale = diff;
+	z_scale = diff;
     }
-    z->inum = INUM_DIV(xx, y->inum);
+    z = dec_raw_new(INUM_DIV(xx, y->inum), z_scale);
     return do_round(z, scale, mode, NULL);
 }
 
@@ -1009,29 +999,30 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	return;
     }
     else if (INUM_SPZERO_P(a->inum)) {
-	div = ALLOC(Decimal);
-	div->scale = 0;
+	VALUE div_inum;
+
 	if (b == DEC_NINF || (b != DEC_PINF && INUM_NEGATIVE_P(b->inum))) {
-	    div->inum = DEC_NZERO;
+	    div_inum = DEC_NZERO;
 	}
 	else {
-	    div->inum = DEC_PZERO;
+	    div_inum = DEC_PZERO;
 	}
+	div = dec_raw_new(div_inum, 0);
 	mod = finite_dup(a);
     }
     else if (DEC_ISINF(b)) {
 	const int a_negative = INUM_NEGATIVE_P(a->inum);
+	VALUE div_inum;
 
-	div = ALLOC(Decimal);
-	div->scale = 0;
 	if (a_negative != (b == DEC_NINF)) { /* signs differ */
-	    div->inum = INT2FIX(-1);
-	    mod = b;
+	    div_inum = INT2FIX(-1);
+	    mod = b; /* FIXME: another infinity instance created! */
 	}
 	else {
-	    div->inum = a_negative ? DEC_NZERO : DEC_PZERO;
+	    div_inum = a_negative ? DEC_NZERO : DEC_PZERO;
  	    mod = finite_dup(a);
 	}
+	div = dec_raw_new(div_inum, 0);
     }
     else {
 	/* both of a and b are finite and nonzero */
@@ -1171,17 +1162,13 @@ dec_divmod(VALUE x, VALUE y)
 static VALUE
 power_with_fixnum(Decimal *x, VALUE y)
 {
-    Decimal *d;
     VALUE inum;
 
     /* XXX: valid to rb_warn() out of here by rb_big_pow()? */
     inum = INUM_POW(x->inum, y);
     if (TYPE(inum) == T_FLOAT) /* got Infinity with warning, by too-big y */
         return VALUE_PINF;
-    d = ALLOC(Decimal);
-    d->inum = inum;
-    d->scale = x->scale * FIX2LONG(y);
-    return WrapDecimal(d);
+    return WrapDecimal(dec_raw_new(inum, x->scale * FIX2LONG(y)));
 }
 
 /* TODO: implement dec ** otherdec */
@@ -1203,13 +1190,7 @@ dec_pow(VALUE x, VALUE y)
     Check_Type(y, T_FIXNUM);
     l = FIX2LONG(y);
     if (l < 0) rb_raise(rb_eArgError, "in a**b, b should be positive integer");
-    if (l == 0) {
-	Decimal *d = ALLOC(Decimal);
-
-	d->inum = INT2FIX(1);
-	d->scale = 0;
-	return WrapDecimal(d);
-    }
+    if (l == 0) return WrapDecimal(dec_raw_new(INT2FIX(1), 0));
     if (l == 1) return x;
 
     if (x == VALUE_PINF) return x;
@@ -1563,16 +1544,15 @@ out_of_double_range_p(Decimal *d, double *f)
     }
     else {
 	negative = Qtrue;
-	d_abs = ALLOC(Decimal);
-	d_abs->inum = INUM_UMINUS(d->inum);
-	d_abs->scale = d->scale;
+	d_abs = dec_raw_new(INUM_UMINUS(d->inum), d->scale);
     }
+
     if (normal_cmp(d_abs, GET_DEC_DBL_MIN()) < 0) { /* too small */
 	*f = negative ? -0.0 : 0.0;
 	out_of_range = Qtrue;
     }
     else if (normal_cmp(d_abs, GET_DEC_DBL_MAX()) > 0) { /* too big */
-	*f = negative ? -1.0 / 0.0 : 1.0 / 0.0;
+	*f = negative ? -INFINITY : INFINITY;
 	out_of_range = Qtrue;
     }
     if (d_abs != d) xfree(d_abs);
@@ -1647,7 +1627,8 @@ dec_to_f(VALUE num)
 static VALUE
 dec_abs(VALUE num)
 {
-    Decimal *d, *d2;
+    Decimal *d;
+    VALUE inum;
 
     CHECK_NAN(num);
     if (num == VALUE_PINF || num == VALUE_NINF)
@@ -1657,10 +1638,8 @@ dec_abs(VALUE num)
 	(d->inum != DEC_NZERO && !INUM_NEGATIVE_P(d->inum))) {
 	return num;
     }
-    d2 = ALLOC(Decimal);
-    d2->inum = (d->inum == DEC_NZERO) ? DEC_PZERO : INUM_UMINUS(d->inum);
-    d2->scale = d->scale;
-    return WrapDecimal(d2);
+    inum = (d->inum == DEC_NZERO) ? DEC_PZERO : INUM_UMINUS(d->inum);
+    return WrapDecimal(dec_raw_new(inum, d->scale));
 }
 
 /*
