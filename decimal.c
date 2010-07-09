@@ -100,8 +100,8 @@ static const VALUE DEC_PZERO = 2, DEC_NZERO = 6;
 /* immediate means non-finite */
 #define DEC_IMMEDIATE_P(d) (DEC_ISINF(d) || (d) == DEC_NaN)
 /* special signed zeros */
-#define DEC_ZERO_P(d) ((d)->inum == DEC_PZERO || (d)->inum == DEC_NZERO)
 #define INUM_SPZERO_P(n) ((n) == DEC_PZERO || (n) == DEC_NZERO)
+#define DEC_ZERO_P(d) INUM_SPZERO_P((d)->inum)
 
 /* use internally in to_f */
 static Decimal *DEC_DBL_MIN = NULL, *DEC_DBL_MAX = NULL;
@@ -114,8 +114,7 @@ static VALUE INUM_DBL_MAX = Qnil;
 			    dbl_threshold_to_inum(DBL_MAX, &INUM_DBL_MAX))
 
 /*
- * all rounding modes used in Decimal#round, corresponding to
- * DEF_ROUNDING_MODE()
+ * all rounding modes
  */
 static VALUE ROUND_CEILING;
 static VALUE ROUND_DOWN;
@@ -436,7 +435,7 @@ dec_to_s(VALUE self)
     if (self == VALUE_PINF) return rb_str_new2("Infinity");
     if (self == VALUE_NINF) return rb_str_new2("-Infinity");
     GetDecimal(self, d);
-    if (d->inum == DEC_PZERO || d->inum == DEC_NZERO) {
+    if (DEC_ZERO_P(d)) {
 	const size_t HEAD_LEN = d->inum == DEC_PZERO ? 2U : 3U; /* "-0.".length */
 	long len = HEAD_LEN + d->scale;
 	char *buf;
