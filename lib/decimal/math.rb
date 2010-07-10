@@ -9,14 +9,15 @@ module Decimal::Math
     x1 = x
     x2 = x * x
     sign = 1
-    d = y = x
+    y = x
     i = z = 1
-    while d.nonzero?
+    loop do
       sign = -sign
       x1 *= x2
       i += 2
       z *= (i - 1) * i
       d = sign * x1.divide(z, scale+1, :down)
+      break if d.zero?
       y += d
     end
     y = -y if negative
@@ -30,15 +31,16 @@ module Decimal::Math
     x1 = 1
     x2 = x * x
     sign = 1
-    d = y = 1
+    y = 1
     i = 0
     z = 1
-    while d.nonzero?
+    loop do
       sign = -sign
       x1 *= x2
       i += 2
       z *= (i - 1) * i
       d = sign * x1.divide(z, scale+1, :down)
+      break if d.zero?
       y += d
     end
     y.round(scale, rounding)
@@ -47,5 +49,51 @@ module Decimal::Math
   def tan(x, scale, rounding=:down)
     s, c = sin(x, scale+1), cos(x, scale+1)
     s.divide(c, scale, rounding)
+  end
+
+  # copied from BigDecimal
+  def exp(x, scale, rounding=:down)
+    return Decimal::NAN if x.infinite? or x.nan?
+    return Decimal("0e#{-scale}") if x.zero?
+    if x.infinite?
+      return x > 0 ? Decimal::INFINITY : Decimal("0e#{-scale}")
+    end
+    x = -x if negative = x < 0
+    z = d = x1 = y = 1
+    i = 0
+    loop do
+      x1 *= x
+      i += 1
+      z *= i
+      d = x1.divide(z, scale+1, :down)
+      break if d.zero?
+      y += d
+    end
+    unless negative
+      y.round(scale, rounding)
+    else
+      Decimal(1).divide(y, scale, rounding)
+    end
+  end
+
+  # copied from BigDecimal
+  def log(x, scale, rounding=:down)
+    return Decimal::NAN if x.nan?
+    return Decimal("0e#{-scale}") if x == 1
+    raise Errno::EDOM if x < 0 # XXX
+    raise Errno::ERANGE if x.zero? # XXX
+    return Decimal::INFINITY if x.infinite?
+    x  = (x - 1).divide(x + 1, scale+1, :down)
+    x2 = x * x
+    d = y = x
+    i = 1
+    loop do
+      x  = (x * x2).floor(scale+1)
+      i += 2
+      d  = x.divide(i, scale+1, :down)
+      break if d.zero?
+      y += d
+    end
+    y * 2
   end
 end
