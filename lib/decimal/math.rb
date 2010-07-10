@@ -1,6 +1,22 @@
 module Decimal::Math
   module_function
 
+  # from book: ISBN4-87408-414-1
+  def sqrt(x, scale, rounding=:down)
+    return Decimal::NAN if x.nan?
+    return Decimal("0e#{-scale}") if x.zero?
+    raise Errno::EDOM if x < 0 # XXX
+    return Decimal::INFINITY if x.infinite?
+
+    s = x > 1 ? x : (x + 1).divide(2, scale+1, :down)
+    begin
+      last = s
+      t = x.divide(s, scale+1, :down) + s
+      s = t.divide(2, scale+1, :down)
+    end while s < last
+    last
+  end
+
   # copied from BigDecimal
   def sin(x, scale, rounding=:down)
     return Decimal::NAN if x.infinite? or x.nan?
