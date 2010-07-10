@@ -652,6 +652,7 @@ dec_plus(VALUE x, VALUE y)
     return WrapDecimal(normal_plus(a, b, Qtrue));
 }
 
+#define NEGATE_INF(x) ((x) == VALUE_PINF ? VALUE_NINF : VALUE_PINF)
 /*
  *  call-seq:
  *     dec - other   => decimal
@@ -681,20 +682,20 @@ dec_minus(VALUE x, VALUE y)
       default:
 	return rb_num_coerce_bin(x, y, '-');
     }
-    GetDecimal(x, a);
-
-    if (DEC_ISINF(a)) {
-	if (a == b) return VALUE_NaN;
+    if (DEC_VALUE_ISINF(x)) {
+	if (x == y) return VALUE_NaN;
 	return x;
     }
-    if (DEC_ZERO_P(a)) { /* FIXME: need to refactor */
+    if (DEC_VALUE_ISINF(y)) return NEGATE_INF(y);
+
+    GetDecimal(x, a);
+    if (DEC_ZERO_P(a)) { /* FIXME: needs refactoring */
 	if (!DEC_ISINF(b) && DEC_ZERO_P(b) && a->inum == b->inum) {
 	     /* FIXME: UNDER CONSTRUCTION for scaling */
 	    return dec_pzero(MAX(a->scale, b->scale));
 	}
 	return dec_uminus(y);
     }
-    if (DEC_ISINF(b)) return dec_uminus(y);
     if (DEC_ZERO_P(b)) return x;
     /* "false" means subtraction */
     return WrapDecimal(normal_plus(a, b, Qfalse));
@@ -847,7 +848,7 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
     }
   coda:
     if (negative) inum = INUM_UMINUS(inum);
-    if (scale <= 0 && inump) {
+    if (scale <= 0 && inump != NULL) {
 	/* return Integer */
 	if (scale < 0) inum = inum_lshift(inum, -scale);
 	*inump = inum;
@@ -968,7 +969,6 @@ dec_divide(int argc, VALUE *argv, VALUE x)
     }
 
     if (DEC_ISINF(a)) {
-	#define NEGATE_INF(x) ((x) == VALUE_PINF ? VALUE_NINF : VALUE_PINF)
 	if (DEC_ISINF(b)) return VALUE_NaN;
 	if (b->inum == DEC_PZERO) return x;
 	if (b->inum == DEC_NZERO) return NEGATE_INF(x);
@@ -1486,11 +1486,11 @@ dec_eql(VALUE x, VALUE y)
 	return Qfalse;
 
     CHECK_NAN2_WITH_VAL(x, y, Qfalse);
+    if (DEC_VALUE_ISINF(x) || DEC_VALUE_ISINF(y))
+	return x == y ? Qtrue : Qfalse;
+
     GetDecimal(x, a);
     GetDecimal(y, b);
-    if (DEC_ISINF(a) || DEC_ISINF(b))
-	return a == b ? Qtrue : Qfalse;
-
     if (a->scale != b->scale)
 	return Qfalse;
     if (a->inum == b->inum)
@@ -1844,7 +1844,7 @@ dec_nan_p(VALUE num)
 static VALUE
 dec_finite_p(VALUE num)
 {
-    if (num != VALUE_PINF && num != VALUE_NINF && num != VALUE_NaN) {
+    if (!DEC_VALUE_ISINF(num) && num != VALUE_NaN) {
 	return Qtrue;
     }
     return Qfalse;
