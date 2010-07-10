@@ -3,6 +3,7 @@ module Decimal::Math
 
   # from book: ISBN4-87408-414-1
   def sqrt(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
     return Decimal::NAN if x.nan?
     return Decimal("0e#{-scale}") if x.zero?
     raise Errno::EDOM if x < 0 # XXX
@@ -19,6 +20,7 @@ module Decimal::Math
 
   # copied from BigDecimal
   def sin(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
     return Decimal::NAN if x.infinite? or x.nan?
     return Decimal("0e#{-scale}") if x.zero?
     x = -x if negative = x < 0
@@ -42,6 +44,7 @@ module Decimal::Math
 
   # copied from BigDecimal
   def cos(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
     return Decimal::NAN if x.infinite? or x.nan?
     x = -x if x < 0
     x1 = 1
@@ -69,6 +72,7 @@ module Decimal::Math
 
   # copied from BigDecimal
   def exp(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
     return Decimal::NAN if x.infinite? or x.nan?
     return Decimal("0e#{-scale}") if x.zero?
     if x.infinite?
@@ -94,6 +98,7 @@ module Decimal::Math
 
   # copied from BigDecimal
   def log(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
     return Decimal::NAN if x.nan?
     return Decimal("0e#{-scale}") if x == 1
     raise Errno::EDOM if x < 0 # XXX
