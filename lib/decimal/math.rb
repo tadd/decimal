@@ -78,7 +78,7 @@ module Decimal::Math
   def exp(x, scale, rounding=:down)
     x = Decimal(x) if x.integer?
     return Decimal::NAN if x.infinite? or x.nan?
-    return Decimal("0e#{-scale}") if x.zero?
+    return Decimal("1e#{-scale}") if x.zero?
     if x.infinite?
       return x > 0 ? Decimal::INFINITY : Decimal("0e#{-scale}")
     end
