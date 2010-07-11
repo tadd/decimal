@@ -1224,7 +1224,7 @@ dec_pow(VALUE x, VALUE y)
 }
 
 static int
-normal_cmp(Decimal *x, Decimal *y)
+normal_cmp(const Decimal *x, const Decimal *y)
 {
     if (INUM_NEGATIVE_P(x->inum) && !INUM_NEGATIVE_P(y->inum)) {
         return -1;
@@ -1869,6 +1869,118 @@ dec_infinite_p(VALUE num)
     return Qnil;
 }
 
+
+/*
+ * Mathematical part
+ */
+static VALUE mMath;
+
+/* :nodoc: */
+static VALUE
+math_ldexp10(VALUE module_unused, VALUE x, VALUE exp)
+{
+    int integer;
+    long lexp;
+    Decimal *d, *d2;
+
+    Check_Type(exp, T_FIXNUM);
+    lexp = FIX2LONG(exp);
+    if (lexp == 0)
+        return x;
+    CHECK_NAN(x);
+    if (DEC_VALUE_ISINF(x))
+        return x;
+
+    if (TYPE(x) == T_FIXNUM || TYPE(x) == T_BIGNUM) {
+        integer = Qtrue;
+        d = inum_to_dec(x);
+    }
+    else {
+        integer = Qfalse;
+        GetDecimal(x, d);
+    }
+    if (lexp > 0 && LONG_MIN + lexp > d->scale)
+        rb_raise(rb_eArgError, "%ld is too big", lexp);
+    if (lexp < 0 && LONG_MAX + lexp < d->scale)
+        rb_raise(rb_eArgError, "%ld is too small", lexp);
+    d2 = finite_dup(d);
+    d2->scale = d->scale - lexp;
+    if (integer) xfree(d);
+    return WrapDecimal(d2);
+}
+
+/* :nodoc: */
+static VALUE
+math_frexp10(VALUE module_unused, VALUE x)
+{
+    int negative, integer;
+    long exp;
+    VALUE inum;
+    Decimal *d, *mant;
+    static const Decimal *min = NULL /* to be 0.1 */, *max; /* to be 1 */
+
+    CHECK_NAN_WITH_VAL(x, rb_assoc_new(VALUE_NaN, INT2FIX(0)));
+    if (DEC_VALUE_ISINF(x))
+        return rb_assoc_new(x, INT2FIX(0));
+
+    if (TYPE(x) == T_FIXNUM || TYPE(x) == T_BIGNUM) {
+        integer = Qtrue;
+        d = inum_to_dec(x);
+    }
+    else {
+        integer = Qfalse;
+        GetDecimal(x, d);
+    }
+    if (DEC_ZERO_P(d)) {
+        if (integer) xfree(d);
+        return rb_assoc_new(x, INT2FIX(0));
+    }
+
+    if (INUM_NEGATIVE_P(d->inum)) {
+        negative = Qtrue;
+        inum = INUM_UMINUS(d->inum);
+    } else {
+        negative = Qfalse;
+        inum = d->inum;
+    }
+    mant = dec_raw_new(inum, d->scale);
+    exp = 0;
+    if (min == NULL) {
+        min = dec_raw_new(INT2FIX(1), 1); /* 0.1 */
+        max = dec_raw_new(INT2FIX(1), 0); /* 1 */
+    }
+    if (normal_cmp(mant, min) <= 0) {
+        do {
+            mant->scale--;
+            exp++;
+        } while (normal_cmp(mant, min) <= 0);
+        goto coda;
+    }
+    if (normal_cmp(mant, max) > 0) {
+        do {
+            mant->scale++;
+            exp--;
+        } while (normal_cmp(mant, max) > 0);
+        goto coda;
+    }
+    /* x is already normalized, return untouched */
+    return rb_assoc_new(x, INT2FIX(0));
+  coda:
+    /* normalized with changing some values */
+    if (integer) xfree(d);
+    if (negative) mant->inum = INUM_UMINUS(mant->inum);
+    return rb_assoc_new(WrapDecimal(mant), LONG2NUM(exp));
+}
+
+static void
+init_math(void)
+{
+    mMath = rb_define_module_under(cDecimal, "Math");
+    rb_define_module_function(mMath, "ldexp10", math_ldexp10, 2);
+    rb_define_module_function(mMath, "frexp10", math_frexp10, 1);
+}
+
+
 /*
  *  +Decimal+ is a decimal fraction that holds exact number in the decimal
  *  system unlike +Float+.  It can hold multi-precision digits, so you can
@@ -1978,4 +2090,6 @@ Init_decimal(void)
     rb_define_method(cDecimal, "nan?", dec_nan_p, 0);
     rb_define_method(cDecimal, "finite?", dec_finite_p, 0);
     rb_define_method(cDecimal, "infinite?", dec_infinite_p, 0);
+
+    init_math();
 }
