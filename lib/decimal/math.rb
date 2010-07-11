@@ -83,7 +83,7 @@ module Decimal::Math
       return x > 0 ? Decimal::INFINITY : Decimal("0e#{-scale}")
     end
     x = -x if negative = x < 0
-    z = d = x1 = y = 1
+    z = x1 = y = 1
     i = 0
     loop do
       x1 *= x
@@ -113,7 +113,7 @@ module Decimal::Math
     return Decimal::INFINITY if x.infinite?
     x  = (x - 1).divide(x + 1, scale+1, :down)
     x2 = x * x
-    d = y = x
+    y = x
     i = 1
     loop do
       x  = (x * x2).floor(scale+1)
@@ -164,7 +164,7 @@ module Decimal::Math
       inx = -1 + sqrt(1 + x * x, scale+1, :down)
       x = inx.divide(x, scale+1,:down)
     end
-    t = d = y = x
+    t = y = x
     r = 3
     x2 = (x * x).floor(scale+1)
     loop do
