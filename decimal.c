@@ -1256,7 +1256,7 @@ cmp(const Decimal *x, const Decimal *y)
     if (x == DEC_NINF || y == DEC_PINF) return -1;
     if (INUM_SPZERO_P(x->inum)) {
 	if (INUM_SPZERO_P(y->inum)) return 0;
-	return INUM_NEGATIVE_P(y->inum) ? -1 : 1;
+	return INUM_NEGATIVE_P(y->inum) ? 1 : -1;
     }
     if (INUM_SPZERO_P(y->inum)) {
 	return INUM_NEGATIVE_P(x->inum) ? -1 : 1;
