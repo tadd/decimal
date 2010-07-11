@@ -51,7 +51,7 @@ module Decimal::Math
     x1 = 1
     x2 = x * x
     sign = 1
-    y = 1
+    y = Decimal(1)
     i = 0
     z = 1
     loop do
@@ -70,7 +70,7 @@ module Decimal::Math
     x = Decimal(x) if x.integer?
     return Decimal::NAN if x.infinite? or x.nan?
     return Decimal("0e#{-scale}") if x.zero?
-    raise Errno::EDOM if x.infinity? # XXX
+    raise Errno::EDOM if x.infinite? # XXX
     s, c = sin(x, scale+1), cos(x, scale+1)
     s.divide(c, scale, rounding)
   end
