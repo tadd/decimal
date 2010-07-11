@@ -230,7 +230,7 @@ cstr_to_dec(const char *str)
 }
 
 static Decimal *
-finite_dup(Decimal *d)
+finite_dup(const Decimal *d)
 {
     VALUE inum;
 
@@ -370,7 +370,7 @@ dec_strip_trailing_zeros(VALUE self)
 
 /* FIXME: should return "%g" format string */
 static VALUE
-finite_to_s(Decimal *d)
+finite_to_s(const Decimal *d)
 {
     const VALUE str = INUM2STR(d->inum);
     const char *s = RSTRING_PTR(str);
@@ -561,7 +561,7 @@ inum_lshift(VALUE x, long n)
 
 /* the "normal" number means "finite and non-zero" */
 static Decimal *
-normal_plus(Decimal *x, Decimal *y, const int add)
+normal_plus(const Decimal *x, const Decimal *y, const int add)
 {
     VALUE inum;
     long scale;
@@ -572,7 +572,7 @@ normal_plus(Decimal *x, Decimal *y, const int add)
 	scale = x->scale;
     }
     else {
-	Decimal *max, *min;
+	const Decimal *max, *min;
 	VALUE min_inum;
 
 	if (x->scale > y->scale) max = x, min = y;
@@ -702,7 +702,7 @@ dec_minus(VALUE x, VALUE y)
 }
 
 static Decimal *
-normal_mul(Decimal *x, Decimal *y)
+normal_mul(const Decimal *x, const Decimal *y)
 {
     return dec_raw_new(INUM_MUL(x->inum, y->inum), x->scale + y->scale);
 }
@@ -761,7 +761,7 @@ dec_mul(VALUE x, VALUE y)
 }
 
 static Decimal *
-do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
+do_round(const Decimal *d, long scale, VALUE mode, VALUE *inump)
 {
     Decimal *d2;
     long diff;
@@ -863,7 +863,7 @@ do_round(Decimal *d, long scale, VALUE mode, VALUE *inump)
 }
 
 static Decimal *
-normal_divide(Decimal *x, Decimal *y, long scale, VALUE mode)
+normal_divide(const Decimal *x, const Decimal *y, long scale, VALUE mode)
 {
     long diff, z_scale;
     VALUE xx;
@@ -1006,10 +1006,9 @@ dec_div(VALUE x, VALUE y)
 
 /* never accepts NaN for a and b */
 static void
-divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
+divmod(const Decimal *a, const Decimal *b, VALUE *divp, VALUE *modp)
 {
     Decimal *div, *mod;
-    Decimal *tmp;
 
     if (DEC_ISINF(a) || (!DEC_ISINF(b) && DEC_ZERO_P(b))) {
 	if (divp) *divp = VALUE_NaN;
@@ -1033,14 +1032,13 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	VALUE div_inum;
 
 	if (a_negative != (b == DEC_NINF)) { /* signs differ */
-	    div_inum = INT2FIX(-1);
-	    mod = b; /* FIXME: another infinity instance created! */
+            if (divp) *divp = WrapDecimal(dec_raw_new(INT2FIX(-1), 0));
+            if (modp) *modp = b == DEC_PINF ? VALUE_PINF : VALUE_NINF;
+            return;
 	}
-	else {
-	    div_inum = a_negative ? DEC_NZERO : DEC_PZERO;
- 	    mod = finite_dup(a);
-	}
+        div_inum = a_negative ? DEC_NZERO : DEC_PZERO;
 	div = dec_raw_new(div_inum, 0);
+        mod = finite_dup(a);
     }
     else {
 	/* both of a and b are finite and nonzero */
@@ -1050,7 +1048,7 @@ divmod(Decimal *a, Decimal *b, VALUE *divp, VALUE *modp)
 	    mod = finite_dup(a);
 	}
 	else {
-	    tmp = normal_mul(div, b); /* XXX */
+	    Decimal *tmp = normal_mul(div, b); /* XXX */
 	    mod = normal_plus(a, tmp, Qfalse); /* mod = x - div*y; */
 	    xfree(tmp); /* XXX */
 	}
@@ -1178,7 +1176,7 @@ dec_divmod(VALUE x, VALUE y)
 }
 
 static VALUE
-power_with_fixnum(Decimal *x, VALUE y)
+power_with_fixnum(const Decimal *x, VALUE y)
 {
     VALUE inum;
 
@@ -1246,7 +1244,7 @@ normal_cmp(const Decimal *x, const Decimal *y)
 
 /* never accepts NaN for x or y */
 static int
-cmp(Decimal *x, Decimal *y)
+cmp(const Decimal *x, const Decimal *y)
 {
     if (x == y) return 0;
     if (x == DEC_PINF || y == DEC_NINF) return 1;
@@ -1551,9 +1549,9 @@ dbl_threshold_to_inum(double threshold, VALUE *val)
 }
 
 static int
-out_of_double_range_p(Decimal *d, double *f)
+out_of_double_range_p(const Decimal *d, double *f)
 {
-    Decimal *d_abs;
+    const Decimal *d_abs;
     int negative, out_of_range = Qfalse;
 
     if (!INUM_NEGATIVE_P(d->inum)) {
@@ -1573,12 +1571,12 @@ out_of_double_range_p(Decimal *d, double *f)
 	*f = negative ? -INFINITY : INFINITY;
 	out_of_range = Qtrue;
     }
-    if (d_abs != d) xfree(d_abs);
+    if (d_abs != d) xfree((void *)d_abs);
     return out_of_range;
 }
 
 static double
-normal_to_f(Decimal *d)
+normal_to_f(const Decimal *d)
 {
     double f;
 
