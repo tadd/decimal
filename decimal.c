@@ -1951,18 +1951,18 @@ math_frexp10(VALUE module UNUSED, VALUE x)
         min = dec_raw_new(INT2FIX(1), 1); /* 0.1 */
         max = dec_raw_new(INT2FIX(1), 0); /* 1 */
     }
-    if (normal_cmp(mant, min) <= 0) {
+    if (normal_cmp(mant, min) < 0) {
         do {
             mant->scale--;
             exp--;
-        } while (normal_cmp(mant, min) <= 0);
+        } while (normal_cmp(mant, min) < 0);
         goto coda;
     }
-    if (normal_cmp(mant, max) > 0) {
+    if (normal_cmp(mant, max) >= 0) {
         do {
             mant->scale++;
             exp++;
-        } while (normal_cmp(mant, max) > 0);
+        } while (normal_cmp(mant, max) >= 0);
         goto coda;
     }
     /* x is already normalized, return untouched */
