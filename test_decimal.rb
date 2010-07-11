@@ -239,25 +239,31 @@ class TestDecimal < Test::Unit::TestCase
   end
 
   def test_math
-    check_sqrt
-    check_sin
     check_cos
+    check_sin
     check_tan
+    check_acos
+    check_asin
+    check_atan
     check_exp
     check_e
     check_log
     check_pi
-    check_atan
-    check_asin
-    check_acos
-  end
-  def check_sqrt
-  end
-  def check_sin
+    check_sqrt
+    check_frexp10
+    check_ldexp10
   end
   def check_cos
   end
+  def check_sin
+  end
   def check_tan
+  end
+  def check_acos
+  end
+  def check_asin
+  end
+  def check_atan
   end
   def check_exp
   end
@@ -267,10 +273,10 @@ class TestDecimal < Test::Unit::TestCase
   end
   def check_pi
   end
-  def check_atan
+  def check_sqrt
   end
-  def check_asin
+  def check_frexp10
   end
-  def check_acos
+  def check_ldexp10
   end
 end
