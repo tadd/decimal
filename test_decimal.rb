@@ -237,4 +237,40 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("0.0", (a + d).to_s)
     assert_equal("1.0", (Decimal("0.0")+Decimal(1)).to_s)
   end
+
+  def test_math
+    check_sqrt
+    check_sin
+    check_cos
+    check_tan
+    check_exp
+    check_e
+    check_log
+    check_pi
+    check_atan
+    check_asin
+    check_acos
+  end
+  def check_sqrt
+  end
+  def check_sin
+  end
+  def check_cos
+  end
+  def check_tan
+  end
+  def check_exp
+  end
+  def check_e
+  end
+  def check_log
+  end
+  def check_pi
+  end
+  def check_atan
+  end
+  def check_asin
+  end
+  def check_acos
+  end
 end
