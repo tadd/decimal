@@ -306,6 +306,11 @@ dec_initialize(VALUE self, VALUE arg)
     return self;
 }
 
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED /* nothing */
+#endif
 /*
  *  call-seq:
  *     Decimal(arg)   => decimal
@@ -314,7 +319,7 @@ dec_initialize(VALUE self, VALUE arg)
  *  never be affected from overriding <code>Decimal#initialize</code>.
  */
 static VALUE
-f_decimal(VALUE klass_unused, VALUE arg)
+f_decimal(VALUE klass UNUSED, VALUE arg)
 {
     return dec_initialize(dec_s_allocate(cDecimal), arg);
 }
@@ -1875,14 +1880,13 @@ static VALUE mMath;
 
 /* :nodoc: */
 static VALUE
-math_ldexp10(VALUE module_unused, VALUE x, VALUE exp)
+math_ldexp10(VALUE module UNUSED, VALUE x, VALUE exp)
 {
     int integer;
     long lexp;
     Decimal *d, *d2;
 
-    Check_Type(exp, T_FIXNUM);
-    lexp = FIX2LONG(exp);
+    lexp = NUM2LONG(exp);
     if (lexp == 0)
         return x;
     CHECK_NAN(x);
@@ -1909,7 +1913,7 @@ math_ldexp10(VALUE module_unused, VALUE x, VALUE exp)
 
 /* :nodoc: */
 static VALUE
-math_frexp10(VALUE module_unused, VALUE x)
+math_frexp10(VALUE module UNUSED, VALUE x)
 {
     int negative, integer;
     long exp;
