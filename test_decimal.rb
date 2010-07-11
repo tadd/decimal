@@ -6,7 +6,12 @@ class TestDecimal < Test::Unit::TestCase
   ZERO = Decimal(0)
   INFINITY = Decimal::INFINITY 
   NAN = Decimal::NAN
-  
+
+  def assert_nan(a, *rest)
+    rest = ["not nan: #{a.inspect}"] if rest.empty?
+    assert(a.nan?, *rest)
+  end
+
   def test_initialize
     assert_nothing_raised {Decimal(1)}
     assert_nothing_raised {Decimal(2**64)}
@@ -98,9 +103,9 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(-3, Decimal("-11.5").div(4))
     assert_equal(2, Decimal("-11.5").div(-4))
     assert_raise(TypeError) {Decimal(11).div(4.0)}
-    assert((Decimal::NAN.div(1)).nan?)
-    assert((Decimal(1).div(Decimal::NAN)).nan?)
-    assert((Decimal::INFINITY.div(1)).nan?)
+    assert_nan(Decimal::NAN.div(1))
+    assert_nan(Decimal(1).div(Decimal::NAN))
+    assert_nan(Decimal::INFINITY.div(1))
   end
 
   def test_mod
@@ -110,9 +115,9 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(Decimal("0.5"), Decimal("-11.5") % 4)
     assert_equal(Decimal("-3.5"), Decimal("-11.5") % -4)
     assert_raise(TypeError) {Decimal(11) % 4.0}
-    assert((Decimal::NAN % 1).nan?)
-    assert((Decimal(1) % Decimal::NAN).nan?)    
-    assert((Decimal::INFINITY % 1).nan?)
+    assert_nan(Decimal::NAN % 1)
+    assert_nan(Decimal(1) % Decimal::NAN)
+    assert_nan(Decimal::INFINITY % 1)
   end
 
   def test_pow
@@ -191,14 +196,14 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal([2, Decimal("-3.5")], Decimal("-11.5").divmod(-4))
     assert_raise(TypeError) {Decimal(11).divmod(4.0)}
     div, mod = Decimal::NAN.divmod(1)
-    assert(div.nan?)
-    assert(mod.nan?)
+    assert_nan(div)
+    assert_nan(mod)
     div, mod = Decimal(1).divmod(Decimal::NAN)
-    assert(div.nan?)
-    assert(mod.nan?)
+    assert_nan(div)
+    assert_nan(mod)
     div, mod = Decimal::INFINITY.divmod(1)
-    assert(div.nan?)
-    assert(mod.nan?)
+    assert_nan(div)
+    assert_nan(mod)
   end
 
   def test_div
