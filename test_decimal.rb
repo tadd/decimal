@@ -153,6 +153,7 @@ class TestDecimal < Test::Unit::TestCase
   def test_cmp
     assert_equal(0, ONE <=> ONE)
     assert_equal(1, ONE <=> ZERO)
+    assert_equal(-1, ZERO <=> ONE)
     assert_equal(-1, ONE <=> Decimal(2))
     assert_nil(ONE <=> nil)
     assert_nil(ONE <=> NAN)
