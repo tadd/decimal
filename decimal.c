@@ -1950,14 +1950,14 @@ math_frexp10(VALUE module_unused, VALUE x)
     if (normal_cmp(mant, min) <= 0) {
         do {
             mant->scale--;
-            exp++;
+            exp--;
         } while (normal_cmp(mant, min) <= 0);
         goto coda;
     }
     if (normal_cmp(mant, max) > 0) {
         do {
             mant->scale++;
-            exp--;
+            exp++;
         } while (normal_cmp(mant, max) > 0);
         goto coda;
     }
@@ -1970,6 +1970,7 @@ math_frexp10(VALUE module_unused, VALUE x)
     return rb_assoc_new(WrapDecimal(mant), LONG2NUM(exp));
 }
 
+/* initialize minimum Math functions in C */
 static void
 init_math(void)
 {
