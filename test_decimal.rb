@@ -12,6 +12,11 @@ class TestDecimal < Test::Unit::TestCase
     assert(a.nan?, *rest)
   end
 
+  def assert_infinity(a, *rest)
+    rest = ["not infinity: #{a.inspect}"] if rest.empty?
+    assert(a.infinite?, *rest)
+  end
+
   def test_initialize
     assert_nothing_raised {Decimal(1)}
     assert_nothing_raised {Decimal(2**64)}
@@ -245,38 +250,129 @@ class TestDecimal < Test::Unit::TestCase
     check_acos
     check_asin
     check_atan
-    check_exp
-    check_e
+    check_exp_and_e
     check_log
     check_pi
     check_sqrt
     check_frexp10
     check_ldexp10
   end
+
+  M = Decimal::Math
+  SCALE = Float::DIG * 2
+  PI = M.pi(SCALE*2)
+  def check(expected, actual)
+    expected = Decimal(expected).round(SCALE/2)
+    actual = Decimal(actual).round(SCALE/2)
+    assert_in_delta(expected, actual, Decimal("1e-#{SCALE/2}"))
+  end
   def check_cos
+    check(1, M.cos(0, SCALE))
+    sqrt_2 = M.sqrt(2, SCALE)
+    pi_q = PI.divide(4, SCALE, :half_up)
+    check(ONE.divide(sqrt_2, SCALE, :half_up), M.cos(pi_q, SCALE))
+    check(0, M.cos(2 * pi_q, SCALE))
+    check(-1, M.cos(4 * pi_q, SCALE))
+    check(0, M.cos(6 * pi_q, SCALE))
   end
   def check_sin
+    check(0,  M.sin(0, SCALE))
+    sqrt_2 = M.sqrt(2, SCALE)
+    pi_q = PI.divide(4, SCALE, :half_up)
+    check(ONE.divide(sqrt_2, SCALE, :half_up), M.sin(pi_q, SCALE))
+    check(1,  M.sin(2 * pi_q, SCALE))
+    check(0,  M.sin(4 * pi_q, SCALE))
+    check(-1, M.sin(6 * pi_q, SCALE))
   end
   def check_tan
+    check(0, M.tan(0, SCALE))
+    pi_q = PI.divide(4, SCALE, :half_up)
+    check(1, M.tan(pi_q, SCALE))
+    assert(M.tan(2 * pi_q, SCALE).abs > Decimal("1e#{SCALE}"))
+    check(0, M.tan(4 * pi_q, SCALE))
+    assert(M.tan(6 * pi_q, SCALE).abs > Decimal("1e#{SCALE}"))
   end
   def check_acos
+    pi_q = PI.divide(4, SCALE, :half_up)
+    check(0 * pi_q, M.acos(1, SCALE))
+    sqrt_2 = M.sqrt(2, SCALE)
+    check(1 * pi_q, M.acos(ONE.divide(sqrt_2, SCALE, :half_up), SCALE))
+    check(2 * pi_q, M.acos(0, SCALE))
+    check(4 * pi_q, M.acos(-1, SCALE))
+    assert_raise(Errno::EDOM) {M.acos(+1 + Decimal("1e-#{SCALE*2}"), SCALE)} # XXX
+    assert_raise(Errno::EDOM) {M.acos(-1 - Decimal("1e-#{SCALE*2}"), SCALE)} # XXX
+    assert_raise(Errno::EDOM) {M.acos(2, SCALE)} # XXX
   end
   def check_asin
+    pi_q = PI.divide(4, SCALE, :half_up)
+    check(0 * pi_q, M.asin(0, SCALE))
+    sqrt_2 = M.sqrt(2, SCALE)
+    check(1 * pi_q, M.asin(ONE.divide(sqrt_2, SCALE, :half_up), SCALE))
+    check(2 * pi_q, M.asin(1, SCALE))
+    check(-2 * pi_q, M.asin(-1, SCALE))
+    assert_raise(Errno::EDOM) {M.asin(+1 + Decimal("1e-#{SCALE*2}"), SCALE)} # XXX
+    assert_raise(Errno::EDOM) {M.asin(-1 - Decimal("1e-#{SCALE*2}"), SCALE)} # XXX
+    assert_raise(Errno::EDOM) {M.asin(2, SCALE)} # XXX
   end
   def check_atan
+    pi_q = PI.divide(4, SCALE, :half_up)
+    check(0 * pi_q, M.atan(0, SCALE))
+    check(1 * pi_q, M.atan(1, SCALE))
+    check(2 * pi_q, M.atan(INFINITY, SCALE))
+    check(-1 * pi_q, M.atan(-1, SCALE))
   end
-  def check_exp
-  end
-  def check_e
+  def check_exp_and_e
+    check(1, M.exp(0, SCALE))
+    check(M.sqrt(M.e(SCALE), SCALE), M.exp(Decimal("0.5"), SCALE))
+    check(M.e(SCALE), M.exp(1, SCALE))
+    check(M.e(SCALE) ** 2, M.exp(2, SCALE))
   end
   def check_log
+    check(0, M.log(1, SCALE))
+    check(1, M.log(M.e(SCALE), SCALE))
+    #check(0, M.log(1, 10))
+    #check(1, M.log(10, 10))
+    #check(2, M.log(100, 10))
+    assert_infinity(M.log(INFINITY, SCALE))
+    #assert_nothing_raised {assert_infinity(-M.log(+0, SCALE))} # really??
+    #assert_nothing_raised {assert_infinity(-M.log(-0, SCALE))} # (ditto)
+    assert_raise(Errno::EDOM) {M.log(-1, SCALE)} # XXX
+    # assert_raise(TypeError) {M.log(1,nil)}
   end
   def check_pi
+    check("3.141592653589793238", M.pi(SCALE))
   end
   def check_sqrt
+    check(0, M.sqrt(0, SCALE))
+    check(1, M.sqrt(1, SCALE))
+    check(2, M.sqrt(4, SCALE))
+    assert_equal(INFINITY, M.sqrt(INFINITY, SCALE))
+    assert_equal("0.0", M.sqrt(Decimal("-0.0"), SCALE).to_s[0..2]) # insure it is +0.0, not -0.0
+    assert_raise(Errno::EDOM) {M.sqrt(-1, SCALE)} # XXX
   end
   def check_frexp10
+    check(0, M.frexp10(0).first)
+    assert_equal(0, M.frexp10(0).last)
+    check("0.1", M.frexp10(Decimal("0.1")).first)
+    assert_equal(0, M.frexp10(Decimal("0.1")).last)
+    check("0.1", M.frexp10(1).first)
+    assert_equal(1, M.frexp10(1).last)
+    check("0.1", M.frexp10(10).first)
+    assert_equal(2, M.frexp10(10).last)
+    check("0.1", M.frexp10(100).first)
+    assert_equal(3, M.frexp10(100).last)
+    check("0.123", M.frexp10(Decimal("12.3")).first)
+    assert_equal(2, M.frexp10(Decimal("12.3")).last)
+    check("-0.123", M.frexp10(Decimal("-12.3")).first)
+    assert_equal(2, M.frexp10(Decimal("-12.3")).last)
   end
   def check_ldexp10
+    check(0, M.ldexp10(0, 0))
+    check("0.1", M.ldexp10(Decimal("0.1"), 0))
+    check(1, M.ldexp10(Decimal("0.1"), 1))
+    check(10, M.ldexp10(Decimal("0.1"), 2))
+    check(100, M.ldexp10(Decimal("0.1"), 3))
+    check("0.123", M.ldexp10(Decimal("12.3"), -2))
+    check("-0.123", M.ldexp10(Decimal("-12.3"), -2))
   end
 end
