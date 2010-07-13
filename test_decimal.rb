@@ -244,21 +244,8 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("1.0", (Decimal("0.0")+Decimal(1)).to_s)
   end
 
-  def test_math
-    check_cos
-    check_sin
-    check_tan
-    check_acos
-    check_asin
-    check_atan
-    check_exp_and_e
-    check_log
-    check_pi
-    check_sqrt
-    check_frexp10
-    check_ldexp10
-  end
-
+  # math part
+  
   M = Decimal::Math
   SCALE = Float::DIG * 2
   PI = M.pi(SCALE*2)
@@ -267,7 +254,8 @@ class TestDecimal < Test::Unit::TestCase
     actual = Decimal(actual).round(SCALE/2)
     assert_in_delta(expected, actual, Decimal("1e-#{SCALE/2}"))
   end
-  def check_cos
+
+  def test_math_cos
     check(1, M.cos(0, SCALE))
     sqrt_2 = M.sqrt(2, SCALE)
     pi_q = PI.divide(4, SCALE, :half_up)
@@ -276,7 +264,8 @@ class TestDecimal < Test::Unit::TestCase
     check(-1, M.cos(4 * pi_q, SCALE))
     check(0, M.cos(6 * pi_q, SCALE))
   end
-  def check_sin
+
+  def test_math_sin
     check(0,  M.sin(0, SCALE))
     sqrt_2 = M.sqrt(2, SCALE)
     pi_q = PI.divide(4, SCALE, :half_up)
@@ -285,7 +274,8 @@ class TestDecimal < Test::Unit::TestCase
     check(0,  M.sin(4 * pi_q, SCALE))
     check(-1, M.sin(6 * pi_q, SCALE))
   end
-  def check_tan
+
+  def test_math_tan
     check(0, M.tan(0, SCALE))
     pi_q = PI.divide(4, SCALE, :half_up)
     check(1, M.tan(pi_q, SCALE))
@@ -293,7 +283,8 @@ class TestDecimal < Test::Unit::TestCase
     check(0, M.tan(4 * pi_q, SCALE))
     assert(M.tan(6 * pi_q, SCALE).abs > Decimal("1e#{SCALE}"))
   end
-  def check_acos
+
+  def test_math_acos
     pi_q = PI.divide(4, SCALE, :half_up)
     check(0 * pi_q, M.acos(1, SCALE))
     sqrt_2 = M.sqrt(2, SCALE)
@@ -304,7 +295,8 @@ class TestDecimal < Test::Unit::TestCase
     assert_raise(Errno::EDOM) {M.acos(-1 - Decimal("1e-#{SCALE*2}"), SCALE)} # XXX
     assert_raise(Errno::EDOM) {M.acos(2, SCALE)} # XXX
   end
-  def check_asin
+
+  def test_math_asin
     pi_q = PI.divide(4, SCALE, :half_up)
     check(0 * pi_q, M.asin(0, SCALE))
     sqrt_2 = M.sqrt(2, SCALE)
@@ -315,20 +307,23 @@ class TestDecimal < Test::Unit::TestCase
     assert_raise(Errno::EDOM) {M.asin(-1 - Decimal("1e-#{SCALE*2}"), SCALE)} # XXX
     assert_raise(Errno::EDOM) {M.asin(2, SCALE)} # XXX
   end
-  def check_atan
+
+  def test_math_atan
     pi_q = PI.divide(4, SCALE, :half_up)
     check(0 * pi_q, M.atan(0, SCALE))
     check(1 * pi_q, M.atan(1, SCALE))
     check(2 * pi_q, M.atan(INFINITY, SCALE))
     check(-1 * pi_q, M.atan(-1, SCALE))
   end
-  def check_exp_and_e
+
+  def test_math_exp_and_e
     check(1, M.exp(0, SCALE))
     check(M.sqrt(M.e(SCALE), SCALE), M.exp(Decimal("0.5"), SCALE))
     check(M.e(SCALE), M.exp(1, SCALE))
     check(M.e(SCALE) ** 2, M.exp(2, SCALE))
   end
-  def check_log
+
+  def test_math_log
     check(0, M.log(1, SCALE))
     check(1, M.log(M.e(SCALE), SCALE))
     #check(0, M.log(1, 10))
@@ -340,10 +335,12 @@ class TestDecimal < Test::Unit::TestCase
     assert_raise(Errno::EDOM) {M.log(-1, SCALE)} # XXX
     # assert_raise(TypeError) {M.log(1,nil)}
   end
-  def check_pi
+
+  def test_math_pi
     check("3.141592653589793238", M.pi(SCALE))
   end
-  def check_sqrt
+
+  def test_math_sqrt
     check(0, M.sqrt(0, SCALE))
     check(1, M.sqrt(1, SCALE))
     check(2, M.sqrt(4, SCALE))
@@ -351,7 +348,8 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("0.0", M.sqrt(Decimal("-0.0"), SCALE).to_s[0..2]) # insure it is +0.0, not -0.0
     assert_raise(Errno::EDOM) {M.sqrt(-1, SCALE)} # XXX
   end
-  def check_frexp10
+
+  def test_math_frexp10
     check(0, M.frexp10(0).first)
     assert_equal(0, M.frexp10(0).last)
     check("0.1", M.frexp10(Decimal("0.1")).first)
@@ -367,7 +365,8 @@ class TestDecimal < Test::Unit::TestCase
     check("-0.123", M.frexp10(Decimal("-12.3")).first)
     assert_equal(2, M.frexp10(Decimal("-12.3")).last)
   end
-  def check_ldexp10
+
+  def test_math_ldexp10
     check(0, M.ldexp10(0, 0))
     check("0.1", M.ldexp10(Decimal("0.1"), 0))
     check(1, M.ldexp10(Decimal("0.1"), 1))
