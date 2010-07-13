@@ -104,7 +104,35 @@ module Decimal::Math
     exp(1, scale, rounding)
   end
 
-  def log(x, scale, rounding=:down)
+  def log(x, *args) # args:(base=nil, scale, rounding=:down)
+    case args.size
+    when 1
+      base = nil
+      scale = args[0]
+      rounding = :down
+    when 2
+      case args[1]
+      when Symbol
+        base = nil
+        scale, rounding = *args
+        unless scale.is_a?(Integer)
+          raise TypeError, "scale #{scale} must be Integer"
+        end
+      when Integer
+        base, scale = *args
+        unless base.is_a?(Integer)
+          raise TypeError, "base #{base} must be Integer"
+        end
+        rounding = :down
+      else
+        raise ArgumentError, "3rd argument #{args[1]} must be Integer or Symbol"
+      end
+    when 3
+      base, scale, rounding = *args
+    else
+      raise ArgumentError, "wrong number of arguments (#{args.size+1} for 2..4)"
+    end
+
     x = Decimal(x) if x.integer?
     return Decimal::NAN if x.nan?
     return Decimal("0e#{-scale}") if x == 1
@@ -122,7 +150,12 @@ module Decimal::Math
       break if d.zero?
       y += d
     end
-    (y * 2).round(scale, rounding)
+    y *= 2
+    if base
+      divisor = log(base, scale+1, :down) # divisor = ln(base)
+      y = y.divide(divisor, scale+1, :down)
+    end
+    y.round(scale, rounding)
   end
 
   def pi(scale, rounding=:down)

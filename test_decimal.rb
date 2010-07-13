@@ -326,14 +326,14 @@ class TestDecimal < Test::Unit::TestCase
   def test_math_log
     check(0, M.log(1, SCALE))
     check(1, M.log(M.e(SCALE), SCALE))
-    #check(0, M.log(1, 10))
-    #check(1, M.log(10, 10))
-    #check(2, M.log(100, 10))
+    check(0, M.log(1, 10, SCALE))
+    check(1, M.log(10, 10, SCALE))
+    check(2, M.log(100, 10, SCALE))
     assert_infinity(M.log(INFINITY, SCALE))
     #assert_nothing_raised {assert_infinity(-M.log(+0, SCALE))} # really??
     #assert_nothing_raised {assert_infinity(-M.log(-0, SCALE))} # (ditto)
     assert_raise(Errno::EDOM) {M.log(-1, SCALE)} # XXX
-    # assert_raise(TypeError) {M.log(1,nil)}
+    assert_raise(TypeError) {M.log(1,:foo, SCALE)}
   end
 
   def test_math_pi
