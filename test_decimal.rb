@@ -349,6 +349,18 @@ class TestDecimal < Test::Unit::TestCase
     assert_raise(Errno::EDOM) {M.sqrt(-1, SCALE)} # XXX
   end
 
+  def test_math_cbrt
+    check(0, M.cbrt(0, SCALE))
+    check(1, M.cbrt(1, SCALE))
+    check(2, M.cbrt(8, SCALE))
+    assert_equal(INFINITY, M.cbrt(INFINITY, SCALE))
+    assert_equal(-INFINITY, M.cbrt(-INFINITY, SCALE)) 
+    assert_equal("0.0", M.cbrt(Decimal("0.0"), SCALE).to_s[0..2])
+    assert_equal("-0.0", M.cbrt(Decimal("-0.0"), SCALE).to_s[0..3]) # insure it is -0.0, not +0.0
+    check(-1, M.cbrt(-1, SCALE))
+    check(-2, M.cbrt(-8, SCALE))
+  end
+
   def test_math_frexp10
     check(0, M.frexp10(0).first)
     assert_equal(0, M.frexp10(0).last)

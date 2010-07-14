@@ -1,7 +1,9 @@
 module Decimal::Math
   module_function
 
-  # from book: ISBN4-87408-414-1
+  # algorithm of functions below are from book: ISBN4-87408-414-1
+  #   sqrt, cbrt
+  
   def sqrt(x, scale, rounding=:down)
     x = Decimal(x) if x.integer?
     return Decimal::NAN if x.nan?
@@ -15,6 +17,25 @@ module Decimal::Math
       t = x.divide(s, scale+1, :down) + s
       s = t.divide(2, scale+1, :down)
     end while s < last
+    last.round(scale, rounding)
+  end
+
+  def cbrt(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return x if x.nan? or x.infinite?
+    if x.zero?
+      negative_zero = Decimal(1).divide(x) < 0 # TODO
+      return negative_zero ? Decimal("-0e#{-scale}") : Decimal("0e#{-scale}")
+    end
+    x = -x if negative = x < 0
+
+    s = x > 1 ? x : Decimal(1)
+    begin
+      last = s
+      t = x.divide(s * s, scale+1, :down) + 2 * s
+      s = t.divide(3, scale+1, :down)
+    end while s < last
+    last = -last if negative
     last.round(scale, rounding)
   end
 
