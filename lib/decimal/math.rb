@@ -183,6 +183,8 @@ module Decimal::Math
   @@_decimal_internal_sqrt_01 = Decimal("0.316227766016838")
   @@_decimal_internal_sqrt_10 = Decimal("3.16227766016838")
   def log10(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::INFINITY if x.infinite?
     if x > @@_decimal_internal_sqrt_10 or x < @@_decimal_internal_sqrt_01
       x2, n = frexp10(x)
       (log(x2, 10, scale+1) + n).round(scale, rounding)
