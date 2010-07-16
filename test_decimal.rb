@@ -255,7 +255,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_in_delta(expected, actual, Decimal("1e-#{SCALE/2}"))
   end
 
-  def test_atan2
+  def test_math_atan2
     #assert_raise(Math::DomainError) { Math.atan2(0, 0) }
     #assert_raise(Math::DomainError) { Math.atan2(Float::INFINITY, Float::INFINITY) }
     #assert_raise(Math::DomainError) { Math.atan2(Float::INFINITY, -Float::INFINITY) }
