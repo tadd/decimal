@@ -270,4 +270,35 @@ module Decimal::Math
     as = asin(x, scale+1, :down)
     (pi_half - as).round(scale, rounding)
   end
+
+  def atan2(y, x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    y = Decimal(y) if y.integer?
+    return Decimal::NAN if x.nan? or y.nan?
+    if y_sign = y.infinite?
+      z = pi(scale+1, :down)
+      divisor = nil
+      if x_sign = x.infinite?
+        z *= 3 if x_sign < 0
+        divisor = 4
+      else
+        divisor = 2
+      end
+      return y_sign * z.divide(divisor, scale, rounding)
+    elsif y.zero?
+      y_sign = Decimal(1).divide(y) < 0
+      x_negative = x < 0 or (x.zero? and Decimal(1).divide(x) < 0)
+      z = x_negative ? pi(scale, rounding) : Decimal("0e#{-scale}")
+      return y_sign ? -z : z
+    elsif x.zero?
+      z = pi(scale+1, :down).divide(2, scale, rounding)
+      return y < 0 ? -z : z
+    elsif x_sign = x.infinite?
+      z = x_sign < 0 ? pi(scale, rounding) : Decimal("0e#{-scale}")
+      return y < 0 ? -z : z
+    end
+
+    z = x.divide(y, scale+1, :down)
+    atan(z, scale, rounding)
+  end
 end
