@@ -327,6 +327,29 @@ class TestDecimal < Test::Unit::TestCase
     check(-1 * pi_q, M.atan(-1, SCALE))
   end
 
+  E = M.e(SCALE*2)
+  E_INV = Decimal(1).divide(E, SCALE*2, :down)
+  def test_math_cosh
+    check(1, M.cosh(0, SCALE))
+    check((E ** 1 + E_INV ** 1).divide(2, SCALE, :down), M.cosh(1, SCALE))
+    check((E ** 2 + E_INV ** 2).divide(2, SCALE, :down), M.cosh(2, SCALE))
+  end
+
+  def test_math_sinh
+    check(0, M.sinh(0, SCALE))
+    check((E ** 1 - E_INV ** 1).divide(2, SCALE, :down), M.sinh(1, SCALE))
+    check((E ** 2 - E_INV ** 2).divide(2, SCALE, :down), M.sinh(2, SCALE))
+  end
+
+  def test_math_tanh
+    x, y = M.sinh(0, SCALE), M.cosh(0, SCALE)
+    check(x.divide(y, SCALE, :down), M.tanh(0, SCALE))
+    x, y = M.sinh(1, SCALE), M.cosh(1, SCALE)
+    check(x.divide(y, SCALE, :down), M.tanh(1, SCALE))
+    x, y = M.sinh(2, SCALE), M.cosh(2, SCALE)
+    check(x.divide(y, SCALE, :down), M.tanh(2, SCALE))
+  end
+
   def test_math_exp_and_e
     check(1, M.exp(0, SCALE))
     check(M.sqrt(M.e(SCALE), SCALE), M.exp(Decimal("0.5"), SCALE))

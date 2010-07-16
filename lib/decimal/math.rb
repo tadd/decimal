@@ -301,4 +301,35 @@ module Decimal::Math
     z = x.divide(y, scale+1, :down)
     atan(z, scale, rounding)
   end
+
+  def sinh(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    return x if x.infinite?
+    return Decimal("0e#{-scale}") if x.zero?
+    e_x = exp(x, scale+1, :down)
+    inv_e_x = Decimal(1).divide(e_x, scale+1, :down)
+    (e_x - inv_e_x).divide(2, scale, rounding)
+  end
+
+  def cosh(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    return Decimal::INFINITY if x.infinite?
+    if x.zero?
+      return scale > 0 ? Decimal(1) : Decimal("1e#{-scale}")
+    end
+    e_x = exp(x, scale+1, :down)
+    inv_e_x = Decimal(1).divide(e_x, scale+1, :down)
+    (e_x + inv_e_x).divide(2, scale, rounding)
+  end
+
+  def tanh(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    return Decimal("0e#{-scale}") if x.zero?
+    return y if y = x.infinite?
+    s, c = sinh(x, scale+1, :down), cosh(x, scale+1, :down)
+    s.divide(c, scale, rounding)
+  end
 end
