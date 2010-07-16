@@ -179,8 +179,16 @@ module Decimal::Math
     y.round(scale, rounding)
   end
 
+  # TODO: better thresholds needed
+  @@_decimal_internal_sqrt_01 = Decimal("0.316227766016838")
+  @@_decimal_internal_sqrt_10 = Decimal("3.16227766016838")
   def log10(x, scale, rounding=:down)
-    log(x, 10, scale, rounding)
+    if x > @@_decimal_internal_sqrt_10 or x < @@_decimal_internal_sqrt_01
+      x2, n = frexp10(x)
+      (log(x2, 10, scale+1) + n).round(scale, rounding)
+    else
+      log(x, 10, scale, rounding)
+    end
   end
 
   def log2(x, scale, rounding=:down)
