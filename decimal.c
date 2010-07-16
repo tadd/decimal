@@ -1061,7 +1061,10 @@ divmod(const Decimal *a, const Decimal *b, VALUE *divp, VALUE *modp)
 	if (!INUM_SPZERO_P(mod->inum) && !INUM_SPZERO_P(b->inum) &&
             INUM_NEGATIVE_P(mod->inum) != INUM_NEGATIVE_P(b->inum)) {
 	    mod = normal_plus(mod, b, Qtrue); /*  mod += y; */
-	    INUM_DEC(div->inum); /* div -= 1; */
+            if (INUM_SPZERO_P(div->inum))
+                div->inum = INT2FIX(-1);
+            else
+                INUM_DEC(div->inum); /* div -= 1; */
 	}
     }
     if (divp) *divp = WrapDecimal(div);
