@@ -332,4 +332,42 @@ module Decimal::Math
     s, c = sinh(x, scale+1, :down), cosh(x, scale+1, :down)
     s.divide(c, scale, rounding)
   end
+
+  def asinh(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    return Decimal("0e#{-scale}") if x.zero?
+    return x if x.infinite?
+    x2 = sqrt(x * x + 1, scale, :down)
+    log(x + x2, scale, rounding)
+  end
+
+  def acosh(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    return Decimal("0e#{-scale}") if x == 1
+    raise Errno::EDOM if x < 1
+    return Decimal::INFINITY if x.infinite?
+    x2 = sqrt(x * x - 1, scale, :down)
+    log(x + x2, scale, rounding)
+  end
+
+  def atanh(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    return Decimal("0e#{-scale}") if x.zero?
+    raise Errno::ERANGE if x == 1 or x == -1 # XXX
+    raise Errno::EDOM if x.abs > 1 # XXX
+    x2 = (1 + x).divide(1 - x, scale+1, :down)
+    y = Decimal("0.5") * log(x2, scale+1, :down)
+    y.round(scale, rounding)
+  end
+
+  def hypot(x, y, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    y = Decimal(y) if y.integer?
+    return Decimal::INFINITY if x.infinite? or y.infinite?
+    return Decimal::NAN if x.nan? or y.nan?
+    sqrt(x * x + y * y, scale, rounding)
+  end
 end

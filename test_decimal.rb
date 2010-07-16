@@ -350,6 +350,33 @@ class TestDecimal < Test::Unit::TestCase
     check(x.divide(y, SCALE, :down), M.tanh(2, SCALE))
   end
 
+  def test_math_acosh
+    check(0, M.acosh(1, SCALE))
+    check(1, M.acosh((E ** 1 + E_INV ** 1).divide(2, SCALE, :down), SCALE))
+    check(2, M.acosh((E ** 2 + E_INV ** 2).divide(2, SCALE, :down), SCALE))
+    assert_raise(Errno::EDOM) {M.acosh(1 - Decimal("1e-1000"), SCALE)} # XXX
+    assert_raise(Errno::EDOM) {M.acosh(0, SCALE)} # XXX
+  end
+
+  def test_math_asinh
+    check(0, M.asinh(0, SCALE))
+    check(1, M.asinh((E ** 1 - E_INV ** 1).divide(2, SCALE, :down), SCALE))
+    check(2, M.asinh((E ** 2 - E_INV ** 2).divide(2, SCALE, :down), SCALE))
+  end
+
+  def test_math_atanh
+    x, y = M.sinh(0, SCALE), M.cosh(0, SCALE)
+    check(0, M.atanh(x.divide(y, SCALE, :down), SCALE))
+    x, y = M.sinh(1, SCALE), M.cosh(1, SCALE)
+    check(1, M.atanh(x.divide(y, SCALE, :down), SCALE))
+    x, y = M.sinh(2, SCALE), M.cosh(2, SCALE)
+    check(2, M.atanh(x.divide(y, SCALE, :down), SCALE))
+    #assert_nothing_raised { assert_infinity(Math.atanh(1)) }
+    #assert_nothing_raised { assert_infinity(-Math.atanh(-1)) }
+    assert_raise(Errno::EDOM) {M.atanh(+1 + Decimal("1e-1000"), SCALE)}
+    assert_raise(Errno::EDOM) {M.atanh(-1 - Decimal("1e-1000"), SCALE)}
+  end
+
   def test_math_exp_and_e
     check(1, M.exp(0, SCALE))
     check(M.sqrt(M.e(SCALE), SCALE), M.exp(Decimal("0.5"), SCALE))
@@ -428,6 +455,10 @@ class TestDecimal < Test::Unit::TestCase
     check(100, M.ldexp10(Decimal("0.1"), 3))
     check("0.123", M.ldexp10(Decimal("12.3"), -2))
     check("-0.123", M.ldexp10(Decimal("-12.3"), -2))
+  end
+
+  def test_math_hypot
+    check(5, M.hypot(3, 4, SCALE))
   end
 
   def test_math_cbrt
