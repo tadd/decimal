@@ -179,6 +179,14 @@ module Decimal::Math
     y.round(scale, rounding)
   end
 
+  def log10(x, scale, rounding=:down)
+    log(x, 10, scale, rounding)
+  end
+
+  def log2(x, scale, rounding=:down)
+    log(x, 2, scale, rounding)
+  end
+
   def pi(scale, rounding=:down)
     pi = 0
 

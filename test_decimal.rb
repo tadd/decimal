@@ -336,6 +336,26 @@ class TestDecimal < Test::Unit::TestCase
     assert_raise(TypeError) {M.log(1,:foo, SCALE)}
   end
 
+  def test_math_log2
+    check(0, M.log2(1, SCALE))
+    check(1, M.log2(2, SCALE))
+    check(2, M.log2(4, SCALE))
+    assert_equal(INFINITY, M.log2(INFINITY, SCALE))
+    #assert_nothing_raised {assert_infinity(-M.log2(+0, SCALE))} # XXX
+    #assert_nothing_raised {assert_infinity(-M.log2(-0, SCALE))} # XXX
+    assert_raise(Errno::EDOM) {M.log2(-1, SCALE)} # XXX
+  end
+
+  def test_math_log10
+    check(0, M.log10(1, SCALE))
+    check(1, M.log10(10, SCALE))
+    check(2, M.log10(100, SCALE))
+    assert_equal(INFINITY, M.log10(INFINITY, SCALE))
+    #assert_nothing_raised {assert_infinity(-M.log10(+0, SCALE))} # XXX
+    #assert_nothing_raised {assert_infinity(-M.log10(-0, SCALE))} # XXX
+    assert_raise(Errno::EDOM) {M.log10(-1, SCALE)} # XXX
+  end
+
   def test_math_pi
     check("3.141592653589793238", M.pi(SCALE))
   end
