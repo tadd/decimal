@@ -2,7 +2,48 @@ module Decimal::Math
   module_function
 
   # algorithm of functions below are from book: ISBN4-87408-414-1
-  #   sqrt, cbrt
+  #   sqrt, cbrt, erf, erfc, *p_gamma, *q_gamma
+
+  def _decimal_internal_p_gamma(a, x, loggamma_a, scale, rounding=:down)
+    if x >= 1 + a
+      y = 1 - _decimal_internal_q_gamma(a, x, loggamma_a, scale+1, :down)
+      return y.round(scale, rounding)
+    end
+    return Decimal("0e#{-scale}") if x.zero?
+    y0 = exp(a * log(x, scale+1, :down) - x - loggamma_a, scale+1, :down)
+    y = term = y0.divide(a, scale+1, :down)
+    k = 1
+    loop do
+      tmp = x.divide(a + k, scale+1, :down)
+      term = (term * tmp).floor(scale+1)
+      break if term.zero?
+      y += term
+      k += 1
+    end
+    y.round(scale, rounding)
+  end
+
+  def _decimal_internal_q_gamma(a, x, loggamma_a, scale, rounding=:down)
+    la, lb = 1, 1 + x - a
+    if x < 1 + a
+      y = 1 - _decimal_internal_p_gamma(a, x, loggamma_a, scale+1, :down)
+      return y.round(scale, rounding)
+    end
+    w = exp(a * log(x, scale+1, :down) - x - loggamma_a, scale+1, :down)
+    y = w.divide(lb, scale+1, :down)
+    k = 2
+    loop do
+      tmp0 = (k - 1 - a) * (lb - la) + (k + x) * lb
+      tmp = tmp0.divide(k, scale+1, :down)
+      la, lb = lb, tmp
+      w0 = (k - 1 - a).divide(k, scale+1, :down)
+      w = (w * w0).floor(scale+1) 
+      term = w.divide(la * lb, scale+1, :down)
+      break if term.zero?
+      y += term
+    end
+    y.round(scale, rounding)
+  end
   
   def sqrt(x, scale, rounding=:down)
     x = Decimal(x) if x.integer?
@@ -328,7 +369,9 @@ module Decimal::Math
     x = Decimal(x) if x.integer?
     return Decimal::NAN if x.nan?
     return Decimal("0e#{-scale}") if x.zero?
-    return y if y = x.infinite?
+    if y = x.infinite?
+      return y
+    end
     s, c = sinh(x, scale+1, :down), cosh(x, scale+1, :down)
     s.divide(c, scale, rounding)
   end
@@ -369,5 +412,46 @@ module Decimal::Math
     return Decimal::INFINITY if x.infinite? or y.infinite?
     return Decimal::NAN if x.nan? or y.nan?
     sqrt(x * x + y * y, scale, rounding)
+  end
+
+  def erf(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    if y = x.infinite?
+      return y
+    end
+    half = Decimal("0.5")
+    half_log_pi = half * log(pi(scale+1, :down), scale+1, :down)
+    x2 = (x * x).floor(scale+1)
+    y = if x >= 0
+          _decimal_internal_p_gamma(half, x2, half_log_pi, scale+1)
+        else
+          -_decimal_internal_p_gamma(half, x2, half_log_pi, scale+1)
+        end
+    y.round(scale, rounding)
+  end
+
+  def erfc(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    if x.zero?
+      return scale > 0 ? Decimal("1."+"0"*scale) : Decimal(1)
+    end
+    if y = x.infinite?
+      if y > 0
+        return Decimal("0e#{-scale}")
+      else
+        return scale > 0 ? Decimal("2."+"0"*scale) : Decimal(2)
+      end
+    end
+    half = Decimal("0.5")
+    half_log_pi = half * log(pi(scale+1, :down), scale+1, :down)
+    x2 = (x * x).floor(scale+1)
+    y = if x >= 0
+          _decimal_internal_q_gamma(half, x2, half_log_pi, scale+1)
+        else
+          1 + _decimal_internal_p_gamma(half, x2, half_log_pi, scale+1)
+        end
+    y.round(scale, rounding)
   end
 end

@@ -461,6 +461,18 @@ class TestDecimal < Test::Unit::TestCase
     check(5, M.hypot(3, 4, SCALE))
   end
 
+  def test_math_erf
+    check(0, M.erf(0, SCALE))
+    check(1, M.erf(Decimal::INFINITY, SCALE))
+    check("0.842700792949715", M.erf(1, SCALE))
+  end
+
+  def test_math_erfc
+    check(1, M.erfc(0, SCALE))
+    check(0, M.erfc(Decimal::INFINITY, SCALE))
+    check("0.157299207050285", M.erfc(1, SCALE))
+  end
+
   def test_math_cbrt
     check(0, M.cbrt(0, SCALE))
     check(1, M.cbrt(1, SCALE))
