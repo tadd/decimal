@@ -4,6 +4,7 @@ module Decimal::Math
   # algorithm of functions below are from book: ISBN4-87408-414-1
   #   sqrt, cbrt, erf, erfc, *p_gamma, *q_gamma
 
+  # internal use only
   def _decimal_internal_p_gamma(a, x, loggamma_a, scale, rounding=:down)
     if x >= 1 + a
       y = 1 - _decimal_internal_q_gamma(a, x, loggamma_a, scale+1, :down)
@@ -23,6 +24,7 @@ module Decimal::Math
     y.round(scale, rounding)
   end
 
+  # internal use only
   def _decimal_internal_q_gamma(a, x, loggamma_a, scale, rounding=:down)
     la, lb = 1, 1 + x - a
     if x < 1 + a
