@@ -203,14 +203,15 @@ module Decimal::Math
     raise Errno::EDOM if x < 0 # XXX
     raise Errno::ERANGE if x.zero? # XXX
     return Decimal::INFINITY if x.infinite?
-    x  = (x - 1).divide(x + 1, scale+1, :down)
-    x2 = x * x
-    y = x
+
+    u  = (x - 1).divide(x + 1, scale+1, :down)
+    u2 = u * u
+    y = u
     i = 1
     loop do
-      x  = (x * x2).floor(scale+1)
+      u  = (u * u2).floor(scale+1)
       i += 2
-      d  = x.divide(i, scale+1, :down)
+      d  = u.divide(i, scale+1, :down)
       break if d.zero?
       y += d
     end
