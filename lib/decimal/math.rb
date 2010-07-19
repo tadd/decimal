@@ -204,14 +204,20 @@ module Decimal::Math
     raise Errno::ERANGE if x.zero? # XXX
     return Decimal::INFINITY if x.infinite?
 
+    if x > 10 or x < Decimal("0.1")
+      x2, n = frexp10(x)
+      y = n * log(10, base, scale+1, :down) + log(x2, base, scale+1, :down)
+      return y.round(scale, rounding)
+    end
+
     u  = (x - 1).divide(x + 1, scale+1, :down)
     u2 = u * u
     y = u
     i = 1
     loop do
-      u  = (u * u2).floor(scale+1)
+      u = (u * u2).floor(scale+1)
       i += 2
-      d  = u.divide(i, scale+1, :down)
+      d = u.divide(i, scale+1, :down)
       break if d.zero?
       y += d
     end
