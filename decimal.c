@@ -1013,7 +1013,8 @@ dec_div(VALUE x, VALUE y)
 static void
 divmod(const Decimal *a, const Decimal *b, VALUE *divp, VALUE *modp)
 {
-    Decimal *div, *mod;
+    VALUE div;
+    Decimal *mod;
 
     if (DEC_ISINF(a) || (!DEC_ISINF(b) && DEC_ZERO_P(b))) {
 	if (divp) *divp = VALUE_NaN;
@@ -1021,15 +1022,7 @@ divmod(const Decimal *a, const Decimal *b, VALUE *divp, VALUE *modp)
 	return;
     }
     else if (INUM_SPZERO_P(a->inum)) {
-	VALUE div_inum;
-
-	if (b == DEC_NINF || (b != DEC_PINF && INUM_NEGATIVE_P(b->inum))) {
-	    div_inum = DEC_NZERO;
-	}
-	else {
-	    div_inum = DEC_PZERO;
-	}
-	div = dec_raw_new(div_inum, 0);
+	div = INT2FIX(0);
 	mod = finite_dup(a);
     }
     else if (DEC_ISINF(b)) {
@@ -1037,38 +1030,39 @@ divmod(const Decimal *a, const Decimal *b, VALUE *divp, VALUE *modp)
 	VALUE div_inum;
 
 	if (a_negative != (b == DEC_NINF)) { /* signs differ */
-            if (divp) *divp = WrapDecimal(dec_raw_new(INT2FIX(-1), 0));
+            if (divp) *divp = INT2FIX(-1);
             if (modp) *modp = b == DEC_PINF ? VALUE_PINF : VALUE_NINF;
             return;
 	}
-        div_inum = a_negative ? DEC_NZERO : DEC_PZERO;
-	div = dec_raw_new(div_inum, 0);
+	div = INT2FIX(0);
         mod = finite_dup(a);
     }
     else {
 	/* both of a and b are finite and nonzero */
-	div = normal_divide(a, b, 0, ROUND_DOWN); /* div = x / y */
-	if (INUM_SPZERO_P(div->inum)) {
-	    if (INUM_NEGATIVE_P(b->inum)) div->inum = DEC_NZERO;
+	Decimal *ddiv = normal_divide(a, b, 0, ROUND_DOWN); /* div = x / y */
+	Decimal *tmp;
+
+	if (INUM_SPZERO_P(ddiv->inum)) {
+            div = INT2FIX(0);
 	    mod = finite_dup(a);
 	}
 	else {
-	    Decimal *tmp = normal_mul(div, b); /* XXX */
+	    div = FIXNUM_P(ddiv->inum) ? ddiv->inum : rb_big_clone(ddiv->inum);
+	    tmp = normal_mul(ddiv, b);
 	    mod = normal_plus(a, tmp, Qfalse); /* mod = x - div*y; */
-	    xfree(tmp); /* XXX */
+	    xfree(tmp);
 	}
+	xfree(ddiv);
 	/* if ((mod < 0 && y > 0) || (mod > 0 && y < 0)) { */
 	if (!INUM_SPZERO_P(mod->inum) && !INUM_SPZERO_P(b->inum) &&
             INUM_NEGATIVE_P(mod->inum) != INUM_NEGATIVE_P(b->inum)) {
-	    mod = normal_plus(mod, b, Qtrue); /*  mod += y; */
-            if (INUM_SPZERO_P(div->inum))
-                div->inum = INT2FIX(-1);
-            else
-                INUM_DEC(div->inum); /* div -= 1; */
+	    tmp = mod;
+	    mod = normal_plus(tmp, b, Qtrue); /*  mod += y; */
+	    xfree(tmp);
+	    INUM_DEC(div); /* div -= 1; */
 	}
     }
-    if (divp) *divp = WrapDecimal(div);
-    else if (!DEC_IMMEDIATE_P(div)) xfree(div);
+    if (divp) *divp = div;
     if (modp) *modp = WrapDecimal(mod);
     else if (!DEC_IMMEDIATE_P(mod)) xfree(mod);
 }
@@ -1147,11 +1141,11 @@ dec_mod(VALUE x, VALUE y)
  *  Returns an array containing the quotient and modulus obtained by
  *  dividing _dec_ by _other_.
  *
- *     Decimal(11).divmod(3)                    #=> [Decimal(3), Decimal(2)]
- *     Decimal(11).divmod(-3)	                #=> [Decimal(-4), Decimal(-1)]
- *     Decimal(11).divmod(Decimal("3.5"))       #=> [Decimal(3), Decimal(0.5)]
- *     Decimal(-11).divmod(Decimal("3.5"))      #=> [Decimal(-4), Decimal(3.0)]
- *     Decimal("11.5").divmod(Decimal("3.5"))   #=> [Decimal(3), Decimal(1.0)]
+ *     Decimal(11).divmod(3)                    #=> [3, Decimal(2)]
+ *     Decimal(11).divmod(-3)	                #=> [-4, Decimal(-1)]
+ *     Decimal(11).divmod(Decimal("3.5"))       #=> [3, Decimal(0.5)]
+ *     Decimal(-11).divmod(Decimal("3.5"))      #=> [-4, Decimal(3.0)]
+ *     Decimal("11.5").divmod(Decimal("3.5"))   #=> [3, Decimal(1.0)]
  *
  *  See Numeric#divmod for more details.
  */
