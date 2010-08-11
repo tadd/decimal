@@ -473,6 +473,65 @@ class TestDecimal < Test::Unit::TestCase
     check("0.157299207050285", M.erfc(1, SCALE))
   end
 
+  SQRT_PI = M.sqrt(PI, SCALE*2)
+  def test_math_gamma
+    check((4 * SQRT_PI).divide(3, SCALE, :down),
+          M.gamma(Decimal("-1.5"), SCALE))
+    check(-2 * SQRT_PI, M.gamma(Decimal("-0.5"), SCALE))
+    check(SQRT_PI, M.gamma(Decimal("0.5"), SCALE))
+    check(1, M.gamma(1, SCALE))
+    check(SQRT_PI.divide(2, SCALE, :down), M.gamma(Decimal("1.5"), SCALE))
+    check(1, M.gamma(2, SCALE))
+    check((3 * SQRT_PI).divide(4, SCALE, :down),
+          M.gamma(Decimal("2.5"), SCALE))
+    check(2, M.gamma(3, SCALE))
+    check((15 * SQRT_PI).divide(8, SCALE, :down),
+          M.gamma(Decimal("3.5"), SCALE))
+    check(6, M.gamma(4, SCALE))
+
+    assert_raise(Errno::EDOM) {M.gamma(-Decimal::INFINITY, SCALE)} # XXX
+  end
+
+  def test_math_lgamma
+    g, s = M.lgamma(Decimal("-1.5"), SCALE)
+    check(M.log((4 * SQRT_PI).divide(3, SCALE, :down), SCALE), g)
+    assert_equal(1, s)
+
+    g, s = M.lgamma(Decimal("-0.5"), SCALE)
+    check(M.log(2 * SQRT_PI, SCALE), g)
+    assert_equal(-1, s)
+
+    g, s = M.lgamma(Decimal("0.5"), SCALE)
+    check(M.log(SQRT_PI, SCALE), g)
+    assert_equal(1, s)
+
+    assert_equal([0, 1], M.lgamma(1, SCALE))
+
+    g, s = M.lgamma(Decimal("1.5"), SCALE)
+    check(M.log(SQRT_PI.divide(2, SCALE, :down), SCALE), g)
+    assert_equal(1, s)
+
+    assert_equal([0, 1], M.lgamma(2, SCALE))
+
+    g, s = M.lgamma(Decimal("2.5"), SCALE)
+    check(M.log((3 * SQRT_PI).divide(4, SCALE, :down), SCALE), g)
+    assert_equal(1, s)
+
+    g, s = M.lgamma(3, SCALE)
+    check(M.log(2, SCALE), g)
+    assert_equal(1, s)
+
+    g, s = M.lgamma(Decimal("3.5"), SCALE)
+    check(M.log((15 * SQRT_PI).divide(8, SCALE, :down), SCALE), g)
+    assert_equal(1, s)
+
+    g, s = M.lgamma(4, SCALE)
+    check(M.log(6, SCALE), g)
+    assert_equal(1, s)
+
+    assert_raise(Errno::EDOM) {M.lgamma(-Decimal::INFINITY, SCALE)} # XXX
+  end
+
   def test_math_cbrt
     check(0, M.cbrt(0, SCALE))
     check(1, M.cbrt(1, SCALE))

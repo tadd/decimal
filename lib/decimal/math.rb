@@ -2,9 +2,10 @@ module Decimal::Math
   module_function
 
   # algorithm of functions below are from book: ISBN4-87408-414-1
-  #   sqrt, cbrt, erf, erfc, *p_gamma, *q_gamma
+  #   sqrt, cbrt, erf, erfc, *p_gamma, *q_gamma, *bernoulli
 
-  # internal use only
+  # functions and variables that prefixed by "_decimal_internal" are
+  # indended to internal use only
   def _decimal_internal_p_gamma(a, x, loggamma_a, scale, rounding=:down)
     if x >= 1 + a
       y = 1 - _decimal_internal_q_gamma(a, x, loggamma_a, scale+1, :down)
@@ -24,7 +25,6 @@ module Decimal::Math
     y.round(scale, rounding)
   end
 
-  # internal use only
   def _decimal_internal_q_gamma(a, x, loggamma_a, scale, rounding=:down)
     la, lb = 1, 1 + x - a
     if x < 1 + a
@@ -46,7 +46,45 @@ module Decimal::Math
     end
     y.round(scale, rounding)
   end
-  
+
+  def _decimal_internal_bernoulli(x, scale, rounding=:down)
+    return Decimal(1) if x == 0
+    return Decimal("-0.5") if x == 1
+    return Decimal(0) unless x % 2 == 0
+
+    t = Hash.new(0)
+    t[1] = 1
+    q = 1
+    n = 2
+    sign = -1
+    loop do
+      (1...n).each do |i|
+        t[i-1] = i * t[i]
+      end
+      t[n-1] = 0
+      n.downto(2) do |i|
+        t[i] += t[i - 2]
+      end
+      if n.even?
+        sign = -sign
+        q *= 4
+        b1 = n * t[0]
+        b2 = q * (q - 1)
+        return sign * Decimal(b1).divide(b2, scale, rounding) if n == x
+      end
+      n += 1
+    end
+  end
+
+  def _decimal_internal_fact(n)
+    return 1 if n < 2
+    (2..n).inject {|a, x| a * x}
+  end
+
+  #
+  # public functions
+  #
+
   def sqrt(x, scale, rounding=:down)
     x = Decimal(x) if x.integer?
     return Decimal::NAN if x.nan?
@@ -229,9 +267,10 @@ module Decimal::Math
     y.round(scale, rounding)
   end
 
-  # TODO: better thresholds needed
+  # internal use only
   @@_decimal_internal_sqrt_01 = Decimal("0.316227766016838")
   @@_decimal_internal_sqrt_10 = Decimal("3.16227766016838")
+  # TODO: better thresholds needed
   def log10(x, scale, rounding=:down)
     x = Decimal(x) if x.integer?
     return Decimal::INFINITY if x.infinite?
@@ -462,5 +501,66 @@ module Decimal::Math
           1 + _decimal_internal_p_gamma(half, x2, half_log_pi, scale+1)
         end
     y.round(scale, rounding)
+  end
+
+  def gamma(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    return Decimal::NAN if x.nan?
+    if inf = x.infinite?
+      return Decimal::INFINITY if inf > 0
+      raise Errno::EDOM # XXX
+    end
+    raise Errno::EDOM if x < 0 and x % 1 == 0 # XXX
+    raise Errno::ERANGE if x.zero? # XXX
+
+    if x < 0
+      pi_tmp = pi(scale+2, :down)
+      pi_x = (pi_tmp * x).floor(scale+2)
+      div1 = sin(pi_x, scale+2, :down)
+      div2 = exp(lgamma(1 - x, scale+2, :down)[0], scale+2, :down)
+      divisor = (div1 * div2).floor(scale+2)
+      return pi_tmp.divide(divisor, scale, rounding)
+    end
+    return Decimal(_decimal_internal_fact(x.to_i - 1)) if (x % 1).zero?
+    exp(lgamma(x, scale+2, :down)[0], scale, rounding)
+  end
+  
+  def lgamma(x, scale, rounding=:down)
+    x = Decimal(x) if x.integer?
+    sign = 1
+    return [Decimal::NAN, sign] if x.nan?
+    return [Decimal("0e#{-scale}"), sign] if x == 1 or x == 2
+    if inf = x.infinite?
+      raise Errno::EDOM if inf < 0
+      return [Decimal::INFINITY, sign]
+    end
+
+    if (x % 1).zero?
+      raise Errno::ERANGE if x <= 0 # XXX
+      return [log(_decimal_internal_fact(x.to_i-1), scale, rounding), sign]
+    end
+    sign = -1 if x < 0 and x % 2 > 1
+    threshold = scale # XXX
+    v = 1
+    while x < threshold
+      v *= x
+      x += 1
+    end
+    half = Decimal("0.5")
+    y = (x - half) * log(x, scale+2, :down) - x +
+        half * log(2 * pi(scale+2, :down), scale+2, :down) -
+        log(v.abs, scale+2, :down)
+    n = 2
+    x2 = x * x
+    w = x
+    loop do
+      bn = _decimal_internal_bernoulli(n, scale+2)
+      term = bn.divide(n * (n - 1) * w, scale+2, :down)
+      break if term.zero?
+      y += term
+      n += 2
+      w *= x2
+    end
+    [y.round(scale, rounding), sign]
   end
 end
