@@ -1,5 +1,4 @@
 * Preserve scale of zeros
-* Implement Math functions
 * Implement "decimal/compat/bigdecimal", a bigdecimal-compatible layer
 * Implement decimal ** otherdecimal, decimal ** -integer
   (with Decimal#power(other, scale=decimal.scale, mode=Decimal::ROUND_XXX))
@@ -14,6 +13,7 @@
 * Static value for well-used value like 0, 1 or 10 ?
 
 done:
+- Implement Math functions
 - Implement webpages
 - Support RubyGems
 - Support Ruby 1.9
