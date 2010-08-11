@@ -1,3 +1,4 @@
+# :stopdoc:
 module Decimal::Math
   module_function
 
