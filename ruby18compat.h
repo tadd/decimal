@@ -33,20 +33,20 @@
 
 #ifndef NAN
 #if BYTE_ORDER == LITTLE_ENDIAN
-static const unsigned char rb_nan[] = "\x00\x00\xc0\x7f";
+static const unsigned char dec_nan_bytes[] = "\x00\x00\xc0\x7f";
 #else
-static const unsigned char rb_nan[] = "\x7f\xc0\x00\x00";
+static const unsigned char dec_nan_bytes[] = "\x7f\xc0\x00\x00";
 #endif
-#define NAN (*(float *)rb_nan)
+#define NAN (*(float *)dec_nan_bytes)
 #endif
 
 #ifndef INFINITY
 #if BYTE_ORDER == LITTLE_ENDIAN
-static const unsigned char rb_infinity[] = "\x00\x00\x80\x7f";
+static const unsigned char dec_infinity_bytes[] = "\x00\x00\x80\x7f";
 #else
-static const unsigned char rb_infinity[] = "\x7f\x80\x00\x00";
+static const unsigned char dec_infinity_bytes[] = "\x7f\x80\x00\x00";
 #endif
-#define INFINITY (*(float *)rb_infinity)
+#define INFINITY (*(float *)dec_infinity_bytes)
 #endif
 
 #ifndef HAVE_RB_USASCII_STR_NEW
