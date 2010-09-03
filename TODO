@@ -1,7 +1,5 @@
 * Preserve scale of zeros
 * Implement "decimal/compat/bigdecimal", a bigdecimal-compatible layer
-* Implement decimal ** otherdecimal, decimal ** -integer
-  (with Decimal#power(other, scale=decimal.scale, mode=Decimal::ROUND_XXX))
 * Be a good friend with other Numeric classes (using Kernel.autoload?)
   - OtherNumerics#to_decimal, Decimal#to_*
 * Define `marshal_dump' and `marshal_load'
@@ -13,6 +11,7 @@
 * Static value for well-used value like 0, 1 or 10 ?
 
 done:
+- Implement decimal ** otherdecimal and decimal ** -integer
 - Implement Math functions
 - Implement webpages
 - Support RubyGems
