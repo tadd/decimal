@@ -178,6 +178,7 @@ module Decimal::Math
     s.divide(c, scale, rounding)
   end
 
+=begin
   def exp(x, scale, rounding=:down)
     x = Decimal(x) if x.integer?
     return Decimal::NAN if x.infinite? or x.nan?
@@ -202,6 +203,7 @@ module Decimal::Math
       Decimal(1).divide(y, scale, rounding)
     end
   end
+=end
 
   def e(scale, rounding=:down)
     exp(1, scale, rounding)
@@ -268,7 +270,6 @@ module Decimal::Math
     y.round(scale, rounding)
   end
 
-  # internal use only
   @@_decimal_internal_sqrt_01 = Decimal("0.316227766016838")
   @@_decimal_internal_sqrt_10 = Decimal("3.16227766016838")
   # TODO: better thresholds needed

@@ -1177,19 +1177,174 @@ dec_divmod(VALUE x, VALUE y)
     return rb_assoc_new(div, mod);
 }
 
-static VALUE
-power_with_fixnum(const Decimal *x, VALUE y)
-{
-    VALUE inum;
+static VALUE math_ln(VALUE x, VALUE scale, VALUE mode);
+static VALUE math_exp(int argc, VALUE *argv, VALUE module UNUSED);
 
-    /* XXX: valid to rb_warn() out of here by rb_big_pow()? */
-    inum = INUM_POW(x->inum, y);
-    if (TYPE(inum) == T_FLOAT) /* got Infinity with warning, by too-big y */
-        return VALUE_PINF;
-    return WrapDecimal(dec_raw_new(inum, x->scale * FIX2LONG(y)));
+static VALUE
+power_with_math_exp(VALUE x, VALUE y, VALUE scale, VALUE mode)
+{
+    VALUE x_ln;
+    VALUE argv[3];
+
+    x_ln = math_ln(x, LONG2NUM(FIX2LONG(scale)+1), ROUND_DOWN);
+    argv[0] = dec_mul(y, x_ln);
+    argv[1] = scale;
+    argv[2] = mode;
+    return math_exp(3, argv, Qnil);
 }
 
-/* TODO: implement dec ** otherdec */
+static VALUE
+power_with_positive_fixnum(VALUE x, VALUE y)
+{
+    VALUE inum;
+    Decimal *a;
+
+    GetDecimal(x, a);
+    /* XXX: valid to rb_warn() out of here by rb_big_pow()? */
+    inum = INUM_POW(a->inum, y);
+    if (TYPE(inum) == T_FLOAT) /* got Infinity with warning, by too-big y */
+        return VALUE_PINF;
+    return WrapDecimal(dec_raw_new(inum, a->scale * FIX2LONG(y)));
+}
+
+static VALUE dec_eq(VALUE x, VALUE y);
+static VALUE dec_lt(VALUE x, VALUE y);
+static VALUE dec_gt(VALUE x, VALUE y);
+static VALUE dec_abs(VALUE x);
+static VALUE dec_zero_p(VALUE x);
+static VALUE dec_finite_p(VALUE x);
+
+static VALUE
+power_body(VALUE x, VALUE y, VALUE scale, VALUE mode)
+{
+    int y_negative_p, y_finite_p, y_integer_p, y_zero_p, y_positive_p,
+        y_odd_p, y_pinf_p, y_ninf_p, y_nan_p, y_one_p;
+    int x_finite_p, x_negative_p, x_nan_p, x_pone_p, x_none_p, x_zero_p,
+        x_abs, x_abs_lt_1, x_abs_gt_1, x_ninf_p, x_pinf_p;
+    long l = 0; /* dummy value */
+
+    if (FIXNUM_P(y)) {
+        l = FIX2LONG(y);
+        y_integer_p = y_finite_p = Qtrue;
+        y_zero_p = (l == 0);
+        y_one_p = (l == 1);
+        y_positive_p = (l > 0);
+        y_negative_p = (l < 0);
+        y_odd_p = (l % 2 != 0);
+        y_pinf_p = y_ninf_p = y_nan_p = Qfalse;
+    } else { /* it's a Decimal */
+        y_finite_p = dec_finite_p(y);
+        y_integer_p = (y_finite_p && !dec_zero_p(dec_mod(y, INT2FIX(1))));
+        y_zero_p = dec_zero_p(y);
+        y_one_p = dec_eq(y, INT2FIX(1));
+        y_positive_p = dec_gt(y, INT2FIX(0));
+        y_negative_p = dec_lt(y, INT2FIX(0));
+        y_odd_p = (y_finite_p && !dec_zero_p(dec_mod(y, INT2FIX(2))));
+        y_pinf_p = (y == VALUE_PINF);
+        y_ninf_p = (y == VALUE_NINF);
+        y_nan_p = (y == VALUE_NaN);
+    }
+    x_finite_p = dec_finite_p(x);
+    x_negative_p = dec_lt(x, INT2FIX(0));
+    x_nan_p = (x == VALUE_NaN);
+    x_pone_p = dec_eq(x, INT2FIX(1));
+    x_none_p = dec_eq(x, INT2FIX(-1));
+    x_zero_p = dec_zero_p(x);
+    x_abs = dec_abs(x);
+    x_abs_lt_1 = dec_lt(x_abs, INT2FIX(1));
+    x_abs_gt_1 = dec_gt(x_abs, INT2FIX(1));
+    x_ninf_p = (x == VALUE_NINF);
+    x_pinf_p = (x == VALUE_PINF);
+
+    if (x_negative_p && x_finite_p && !y_integer_p && y_finite_p) {
+        rb_raise(rb_eArgError, "in a**b, a is negative and b is not integer");
+    }
+    if (x_pone_p || y_zero_p) {
+        return WrapDecimal(dec_raw_new(INT2FIX(1), 0));
+    }
+    if (x_zero_p && y_positive_p) {
+        return WrapDecimal(dec_raw_new(DEC_PZERO, 0));
+    }
+    if (x_none_p && (y_pinf_p || y_ninf_p)) {
+        return WrapDecimal(dec_raw_new(INT2FIX(1), 0));
+    }
+    if (x_abs_lt_1 && y_ninf_p) {
+        return VALUE_PINF;
+    }
+    if ((x_abs_gt_1 && y_ninf_p) || (x_abs_lt_1 && y_pinf_p)) {
+        return WrapDecimal(dec_raw_new(DEC_PZERO, 0));
+    }
+    if (x_abs_gt_1 && y_pinf_p) {
+        return VALUE_PINF;
+    }
+    if (x_ninf_p) {
+        if (y_negative_p) {
+            return WrapDecimal(dec_raw_new(DEC_PZERO, 0));
+        }
+        if (y_positive_p) {
+            return y_odd_p ? VALUE_NINF : VALUE_PINF;
+        }
+    }
+    if (x_pinf_p) {
+        if (y_negative_p) {
+            return WrapDecimal(dec_raw_new(DEC_PZERO, 0));
+        }
+        if (y_positive_p) {
+            return VALUE_PINF;
+        }
+    }
+    if (x_zero_p && y_negative_p) {
+         /* FIXME; pole error? */
+        rb_raise(rb_eArgError, "in a**b, a is 0 and y is negative");
+    }
+    if (x_nan_p || y_nan_p) {
+        return VALUE_NaN;
+    }
+    if (y_one_p) return x;
+    if (FIXNUM_P(y)) {
+        if (l > 0) return power_with_positive_fixnum(x, y);
+        y = WrapDecimal(inum_to_dec(y));
+    }
+    return power_with_math_exp(x, y, scale, mode);
+}
+
+/*
+ *  dec.power(otherdec, scale=(), rounding=:unnecessary)
+ */
+/* :nodoc: */
+static VALUE
+dec_power(int argc, VALUE *argv, VALUE x)
+{
+    Decimal *a;
+    VALUE mode = ROUND_UNNECESSARY;
+    VALUE y, scale, vmode;
+
+    rb_scan_args(argc, argv, "12", &y, &scale, &vmode);
+    switch (argc) {
+      case 3:
+        Check_Type(vmode, T_SYMBOL);
+	if (!valid_rounding_mode_p(vmode)) {
+	    rb_raise(rb_eArgError, "invalid rounding mode %s",
+                     RSTRING_PTR(rb_inspect(vmode)));
+	}
+	mode = vmode;
+	/* fall through */
+    case 2:
+        Check_Type(scale, T_FIXNUM);
+        break;
+    case 1:
+	if (mode != ROUND_UNNECESSARY) {
+	    rb_raise(rb_eArgError, "scale number argument needed");
+	}
+    }
+
+    if (!FIXNUM_P(y) && !DECIMAL_P(y)) {
+        rb_raise(rb_eTypeError, "2nd argument %s must be Fixnum or Decimal",
+                 RSTRING_PTR(rb_inspect(y)));
+    }
+    return power_body(x, y, scale, mode);
+}
+
 /*
  *  call-seq:
  *     dec ** fix   => decimal
@@ -1201,26 +1356,7 @@ power_with_fixnum(const Decimal *x, VALUE y)
 static VALUE
 dec_pow(VALUE x, VALUE y)
 {
-    Decimal *a;
-    long l;
-
-    CHECK_NAN(x);
-    Check_Type(y, T_FIXNUM);
-    l = FIX2LONG(y);
-    if (l < 0) rb_raise(rb_eArgError, "in a**b, b should be positive integer");
-    if (l == 0) return WrapDecimal(dec_raw_new(INT2FIX(1), 0));
-    if (l == 1) return x;
-
-    if (x == VALUE_PINF) return x;
-    if (x == VALUE_NINF) {
-	return l % 2 == 0 ? VALUE_PINF : VALUE_NINF;
-    }
-    GetDecimal(x, a);
-    if (a->inum == DEC_PZERO) return x;
-    if (a->inum == DEC_NZERO) {
-	return l % 2 == 0 ? dec_uminus(x) : x;
-    }
-    return power_with_fixnum(a, y);
+    return dec_power(1, &y, x);
 }
 
 static int
@@ -1890,7 +2026,7 @@ math_ldexp10(VALUE module UNUSED, VALUE x, VALUE exp)
     if (DEC_VALUE_ISINF(x))
         return x;
 
-    if (TYPE(x) == T_FIXNUM || TYPE(x) == T_BIGNUM) {
+    if (FIXNUM_P(x) || TYPE(x) == T_BIGNUM) {
         integer = Qtrue;
         d = inum_to_dec(x);
     }
@@ -1922,7 +2058,7 @@ math_frexp10(VALUE module UNUSED, VALUE x)
     if (DEC_VALUE_ISINF(x))
         return rb_assoc_new(x, INT2FIX(0));
 
-    if (TYPE(x) == T_FIXNUM || TYPE(x) == T_BIGNUM) {
+    if (FIXNUM_P(x) || TYPE(x) == T_BIGNUM) {
         integer = Qtrue;
         d = inum_to_dec(x);
     }
@@ -1971,6 +2107,100 @@ math_frexp10(VALUE module UNUSED, VALUE x)
     return rb_assoc_new(WrapDecimal(mant), LONG2NUM(exp));
 }
 
+/* :nodoc: */
+static VALUE
+math_exp(int argc, VALUE *argv, VALUE module UNUSED) /* (x, scale, rounding=:down) */
+{
+    VALUE x, scale, mode;
+    int negative;
+    VALUE z, x1, y, i, d;
+    VALUE argv2[3]; /* for divide / round */
+
+    rb_scan_args(argc, argv, "21", &x, &scale, &mode);
+    switch (argc) {
+      case 3:
+	Check_Type(mode, T_SYMBOL);
+	if (!valid_rounding_mode_p(mode)) {
+	    rb_raise(rb_eArgError, "invalid rounding mode %s",
+                     RSTRING_PTR(rb_inspect(mode)));
+	}
+	/* fall through */
+      default:
+        Check_Type(scale, T_FIXNUM);
+	if (NIL_P(mode)) mode = ROUND_DOWN;
+	break;
+    }
+    if (FIXNUM_P(x) || TYPE(x) == T_BIGNUM) x = WrapDecimal(inum_to_dec(x));
+    if (dec_nan_p(x)) return VALUE_NaN;
+    if (dec_zero_p(x)) return WrapDecimal(dec_raw_new(INT2FIX(1), 0));
+    if (dec_infinite_p(x) != Qnil) {
+	if (x == VALUE_PINF)
+            return VALUE_PINF;
+        return WrapDecimal(dec_raw_new(DEC_PZERO, 0));
+    }
+    negative = dec_lt(x, INT2FIX(0));
+    if (negative) x = dec_uminus(x);
+
+    y = WrapDecimal(dec_raw_new(INT2FIX(1), 0));
+    x1 = WrapDecimal(dec_raw_new(INT2FIX(1), 0));
+    z = INT2FIX(1);
+    i = INT2FIX(0);
+    argv2[1] = INUM_PLUS(scale, INT2FIX(1));
+    argv2[2] = ROUND_DOWN;
+    for (;;) {
+	x1 = dec_mul(x1, x);
+	INUM_INC(i);
+	z = INUM_MUL(z, i);
+	argv2[0] = z;
+	d = dec_divide(3, argv2, x1);
+	if (dec_zero_p(d)) break;
+	y = dec_plus(y, d);
+    }
+    if (negative) {
+	argv2[0] = y;
+	argv2[1] = scale;
+	argv2[2] = mode;
+	y = dec_divide(3, argv2, WrapDecimal(dec_raw_new(INT2FIX(1), 0)));
+    } else {
+	argv2[0] = scale;
+	argv2[1] = mode;
+	y = dec_round(2, argv2, y);
+    }
+    return y;
+}
+
+/* internal use only */
+static VALUE
+math_ln(VALUE x, VALUE scale, VALUE mode)
+{
+    VALUE u, u2, i, d, y;
+    VALUE argv[3], scale_more;
+    
+    if (dec_eq(x, INT2FIX(1))) return WrapDecimal(dec_raw_new(DEC_PZERO, 0));
+
+    scale_more = NUM2LONG(LONG2FIX(scale) + 1);
+    argv[0] = dec_plus(x, INT2FIX(1));
+    argv[1] = scale_more;
+    argv[2] = ROUND_DOWN;
+    u  = dec_divide(3, argv, dec_minus(x, INT2FIX(1)));
+
+    u2 = dec_mul(u, u);
+    y = u;
+    i = INT2FIX(1);
+    for (;;) {
+        u = dec_floor(1, &scale_more, dec_mul(u, u2));
+        i = INUM_PLUS(i, INT2FIX(2));
+        argv[0] = i;
+        d = dec_divide(3, argv, u);
+        if (dec_zero_p(d)) break;
+        y = dec_plus(y, d);
+    }
+    y = dec_mul(y, INT2FIX(2));
+    argv[0] = scale;
+    argv[1] = mode;
+    return dec_round(2, argv, y);
+}
+
 /* initialize minimum Math functions in C */
 /* not documented yet. */
 static void
@@ -1979,6 +2209,7 @@ init_math(void)
     mMath = rb_define_module_under(cDecimal, "Math");
     rb_define_module_function(mMath, "ldexp10", math_ldexp10, 2);
     rb_define_module_function(mMath, "frexp10", math_frexp10, 1);
+    rb_define_module_function(mMath, "exp", math_exp, -1);
 }
 
 
@@ -2071,6 +2302,7 @@ Init_decimal(void)
     rb_define_method(cDecimal, "%", dec_mod, 1);
     rb_define_method(cDecimal, "modulo", dec_mod, 1);
     rb_define_method(cDecimal, "divmod", dec_divmod, 1);
+    rb_define_method(cDecimal, "power", dec_power, -1);
     rb_define_method(cDecimal, "**", dec_pow, 1);
     rb_define_method(cDecimal, "==", dec_eq, 1);
     rb_define_method(cDecimal, "<=>", dec_cmp, 1);
