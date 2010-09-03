@@ -2178,7 +2178,7 @@ math_ln(VALUE x, VALUE scale, VALUE mode)
     
     if (dec_eq(x, INT2FIX(1))) return WrapDecimal(dec_raw_new(DEC_PZERO, 0));
 
-    scale_more = NUM2LONG(LONG2FIX(scale) + 1);
+    scale_more = LONG2FIX(FIX2LONG(scale) + 1);
     argv[0] = dec_plus(x, INT2FIX(1));
     argv[1] = scale_more;
     argv[2] = ROUND_DOWN;
