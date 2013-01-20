@@ -94,7 +94,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_raise(TypeError) {Decimal("0.1") * 1.0}
   end
 
-  def test_div
+  def test_divide
     assert_equal(Decimal("0.1"), ONE.divide(10, 1))
     sum = Decimal(1 << 10)
     10.times {sum = sum.divide(2)}
