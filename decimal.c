@@ -772,7 +772,7 @@ do_round(const Decimal *d, long scale, VALUE mode, VALUE *inump)
     long diff;
     int lower;
     int trailing_nonzero, negative;
-    VALUE inum, inumabs, shift, ary;
+    VALUE inum = Qundef, inumabs, shift, ary;
 
     if (d == DEC_PINF) rb_raise(eDomainError, "Infinity");
     if (d == DEC_NINF) rb_raise(eDomainError, "-Infinity");
@@ -1027,7 +1027,6 @@ divmod(const Decimal *a, const Decimal *b, VALUE *divp, VALUE *modp)
     }
     else if (DEC_ISINF(b)) {
 	const int a_negative = INUM_NEGATIVE_P(a->inum);
-	VALUE div_inum;
 
 	if (a_negative != (b == DEC_NINF)) { /* signs differ */
             if (divp) *divp = INT2FIX(-1);
@@ -1315,7 +1314,6 @@ power_body(VALUE x, VALUE y, VALUE scale, VALUE mode)
 static VALUE
 dec_power(int argc, VALUE *argv, VALUE x)
 {
-    Decimal *a;
     VALUE mode = ROUND_UNNECESSARY;
     VALUE y, scale, vmode;
 
