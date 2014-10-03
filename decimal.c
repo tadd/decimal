@@ -23,9 +23,6 @@
 #include <util.h>
 #endif
 
-/* we need support both of 1.8/1.9 with the same source! */
-#include "ruby18compat.h"
-
 /*
  * unfortunately, few copies of Integer functions
  * are needed from original Ruby
