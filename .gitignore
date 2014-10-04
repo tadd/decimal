@@ -6,3 +6,4 @@
 *.dylib
 /doc/
 Makefile
+mkmf.log
