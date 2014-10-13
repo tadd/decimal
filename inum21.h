@@ -10,6 +10,18 @@
  */
 
 /*
+ * copied from internal.h
+ */
+
+#define MUL_OVERFLOW_SIGNED_INTEGER_P(a, b, min, max) ( \
+    (a) == 0 ? 0 : \
+    (a) == -1 ? (b) < -(max) : \
+    (a) > 0 ? \
+      ((b) > 0 ? (max) / (a) < (b) : (min) / (a) > (b)) : \
+      ((b) > 0 ? (min) / (a) < (b) : (max) / (a) > (b)))
+#define MUL_OVERFLOW_FIXNUM_P(a, b) MUL_OVERFLOW_SIGNED_INTEGER_P(a, b, FIXNUM_MIN, FIXNUM_MAX)
+
+/*
  * copied from util.c
  */
 
@@ -2020,18 +2032,6 @@ rb_big_odd_p(VALUE num)
     }
     return Qfalse;
 }
-
-/*
- * copied from internal.h
- */
-
-#define MUL_OVERFLOW_SIGNED_INTEGER_P(a, b, min, max) ( \
-    (a) == 0 ? 0 : \
-    (a) == -1 ? (b) < -(max) : \
-    (a) > 0 ? \
-      ((b) > 0 ? (max) / (a) < (b) : (min) / (a) > (b)) : \
-      ((b) > 0 ? (min) / (a) < (b) : (max) / (a) > (b)))
-#define MUL_OVERFLOW_FIXNUM_P(a, b) MUL_OVERFLOW_SIGNED_INTEGER_P(a, b, FIXNUM_MIN, FIXNUM_MAX)
 
 /*
  * copied from numeric.c
