@@ -19,5 +19,6 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = %w(README.rdoc decimal.c)
   s.authors = "Tadashi Saito"
   s.email = "tad.a.digger@gmail.com"
+  s.license = 'Ruby'
   s.post_install_message = "\n\t\t" << IO.read("README.1st") << "\n"
 end
