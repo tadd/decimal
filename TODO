@@ -7,7 +7,6 @@
 * Implement Decimal.pi / Decimal.e with a precise option
 * Decimal#format_s based on format of Excel
 * Embedded decimal32/64 (that size equals to pointer's)
-* GMP support with "--with-gmp" and inumgmp.h
 * Static value for well-used value like 0, 1 or 10 ?
 
 done:
@@ -21,4 +20,4 @@ done:
 - Write RDocs
 - Implement decimal ** fixnum 
 - Create .document
-
+- GMP support with "--with-gmp" and inumgmp.h (via Ruby 2.1)
