@@ -10,10 +10,10 @@ Gem::Specification.new do |s|
     provides simple, compact, fast, precise, stable and easy-to-use solution.
   EOS
   s.extensions = "extconf.rb"
-  s.files = %w(.document COPYING GPL INSTALL README.1st README.rdoc TODO decimal.c
-  	       decimal.gemspec depend extconf.rb inum18.h inum191.h inum192.h
-	       ruby18compat.h lib/decimal.rb lib/decimal/math.rb
-	       test_decimal.rb)
+  s.files = %w(.document COPYING BSDL INSTALL README.1st README.rdoc TODO decimal.c
+               decimal.gemspec depend extconf.rb inum193.h inum200.h inum21.h inum22.h
+               ruby18compat.h lib/decimal.rb lib/decimal/math.rb
+               test_decimal.rb)
   s.has_rdoc = true
   s.rdoc_options = %w(-t Decimal -m README.rdoc)
   s.extra_rdoc_files = %w(README.rdoc decimal.c)
