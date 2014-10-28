@@ -7,3 +7,5 @@
 /doc/
 Makefile
 mkmf.log
+.RUBYLIBDIR*
+.RUBYARCHDIR*
