@@ -1,8 +1,8 @@
 Gem::Specification.new do |s|
   s.name = "decimal"
   s.rubyforge_project = s.name
-  s.version = "0.1.1dev"
-  s.date = "2011-01-01"
+  s.version = "0.1.1"
+  s.date = "2014-10-28"
   s.summary = "(yet another) multi-precision decimal arithmetic library"
   s.homepage = "http://decimal.rubyforge.org/"
   s.description = <<-EOS.split("\n").map{|l|l.lstrip}.join(" ")
