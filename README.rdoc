@@ -6,11 +6,8 @@ precise, stable and easy-to-use solution.
 
 == Webpages
 
-* {Home}[http://decimal.rubyforge.org/]
-* {GitHub}[https://github.com/tadd/decimal]
-* {Latest API Documents}[http://decimal.rubyforge.org/rdoc/]
-* {Project Page at RubyForge}[http://rubyforge.org/projects/decimal/]
-* {Mailing Lists}[http://rubyforge.org/mail/?group_id=1994]
+* {Home}[https://github.com/tadd/decimal]
+* {Latest API Documents}[http://www.rubydoc.info/gems/decimal/]
 
 == Requirements
 
