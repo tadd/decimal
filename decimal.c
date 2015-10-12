@@ -1216,7 +1216,8 @@ power_body(VALUE x, VALUE y, VALUE scale, VALUE mode)
     int y_negative_p, y_finite_p, y_integer_p, y_zero_p, y_positive_p,
         y_odd_p, y_pinf_p, y_ninf_p, y_nan_p, y_one_p;
     int x_finite_p, x_negative_p, x_nan_p, x_pone_p, x_none_p, x_zero_p,
-        x_abs, x_abs_lt_1, x_abs_gt_1, x_ninf_p, x_pinf_p;
+        x_abs_lt_1, x_abs_gt_1, x_ninf_p, x_pinf_p;
+    VALUE x_abs;
     long l = 0; /* dummy value */
 
     if (FIXNUM_P(y)) {
