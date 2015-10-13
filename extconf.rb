@@ -8,8 +8,10 @@ version = if have_func('rb_gc_mark_threads')
             '200'
           elsif have_func('rb_fork')
             '21'
-          else
+          elsif have_func('rb_quad_pack')
             '22'
+          else
+            '23'
           end
 $CFLAGS << " -DINUM_SOURCE_FILE=" + %(\\"inum#{version}.h\\")
 
