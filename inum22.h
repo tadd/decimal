@@ -1,5 +1,5 @@
 /*
- * Ruby's Integer part from trunk, rXXXXX.
+ * Ruby's Integer part from trunk, r47910.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
