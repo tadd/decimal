@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.extensions = "extconf.rb"
   s.files = %w(.document COPYING BSDL INSTALL README.1st README.rdoc TODO decimal.c
                decimal.gemspec depend extconf.rb inum193.h inum200.h inum21.h inum22.h
-               inum23.h ruby18compat.h lib/decimal.rb lib/decimal/math.rb
+               inum23.h lib/decimal.rb lib/decimal/math.rb
                test_decimal.rb)
   s.has_rdoc = true
   s.rdoc_options = %w(-t Decimal -m README.rdoc)
