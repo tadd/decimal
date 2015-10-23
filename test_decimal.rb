@@ -108,21 +108,21 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal(-3, Decimal("-11.5").div(4))
     assert_equal(2, Decimal("-11.5").div(-4))
     assert_raise(TypeError) {Decimal(11).div(4.0)}
-    assert_nan(Decimal::NAN.div(1))
-    assert_nan(Decimal(1).div(Decimal::NAN))
-    assert_nan(Decimal::INFINITY.div(1))
+    assert_nan(NAN.div(1))
+    assert_nan(ONE.div(NAN))
+    assert_nan(INFINITY.div(1))
   end
 
   def test_mod
-    assert_equal(0, Decimal(1) % 1)
+    assert_equal(0, ONE % 1)
     assert_equal(Decimal("3.5"), Decimal("11.5") % 4)
     assert_equal(Decimal("-0.5"), Decimal("11.5") % -4)
     assert_equal(Decimal("0.5"), Decimal("-11.5") % 4)
     assert_equal(Decimal("-3.5"), Decimal("-11.5") % -4)
     assert_raise(TypeError) {Decimal(11) % 4.0}
-    assert_nan(Decimal::NAN % 1)
-    assert_nan(Decimal(1) % Decimal::NAN)
-    assert_nan(Decimal::INFINITY % 1)
+    assert_nan(NAN % 1)
+    assert_nan(ONE % Decimal::NAN)
+    assert_nan(INFINITY % 1)
   end
 
   def test_pow
@@ -201,19 +201,19 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal([-3, Decimal("0.5")], Decimal("-11.5").divmod(4))
     assert_equal([2, Decimal("-3.5")], Decimal("-11.5").divmod(-4))
     assert_raise(TypeError) {Decimal(11).divmod(4.0)}
-    div, mod = Decimal::NAN.divmod(1)
+    div, mod = NAN.divmod(1)
     assert_nan(div)
     assert_nan(mod)
-    div, mod = Decimal(1).divmod(Decimal::NAN)
+    div, mod = ONE.divmod(NAN)
     assert_nan(div)
     assert_nan(mod)
-    div, mod = Decimal::INFINITY.divmod(1)
+    div, mod = INFINITY.divmod(1)
     assert_nan(div)
     assert_nan(mod)
   end
 
   def test_div
-    assert_equal(1, Decimal(1).div(1))
+    assert_equal(1, ONE.div(1))
     assert_equal(2, Decimal("11.5").div(4))
     assert_equal(-3, Decimal("11.5").div(-4))
     assert_equal(-3, Decimal("-11.5").div(4))
@@ -221,7 +221,7 @@ class TestDecimal < Test::Unit::TestCase
   end
 
   def test_remainder
-    assert_equal(0, Decimal(1).remainder(1))
+    assert_equal(0, ONE.remainder(1))
     assert_equal(Decimal("3.5"), Decimal("11.5").remainder(4))
     assert_equal(Decimal("3.5"), Decimal("11.5").remainder(-4))
     assert_equal(Decimal("-3.5"), Decimal("-11.5").remainder(4))
@@ -241,7 +241,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("0.0", (a + b).to_s)
     assert_equal("-0.0", (c + d).to_s)
     assert_equal("0.0", (a + d).to_s)
-    assert_equal("1.0", (Decimal("0.0")+Decimal(1)).to_s)
+    assert_equal("1.0", (Decimal("0.0")+ONE).to_s)
   end
 
   # math part
@@ -328,7 +328,7 @@ class TestDecimal < Test::Unit::TestCase
   end
 
   E = M.e(SCALE*2)
-  E_INV = Decimal(1).divide(E, SCALE*2, :down)
+  E_INV = ONE.divide(E, SCALE*2, :down)
   def test_math_cosh
     check(1, M.cosh(0, SCALE))
     check((E ** 1 + E_INV ** 1).divide(2, SCALE, :down), M.cosh(1, SCALE))
@@ -463,13 +463,13 @@ class TestDecimal < Test::Unit::TestCase
 
   def test_math_erf
     check(0, M.erf(0, SCALE))
-    check(1, M.erf(Decimal::INFINITY, SCALE))
+    check(1, M.erf(INFINITY, SCALE))
     check("0.842700792949715", M.erf(1, SCALE))
   end
 
   def test_math_erfc
     check(1, M.erfc(0, SCALE))
-    check(0, M.erfc(Decimal::INFINITY, SCALE))
+    check(0, M.erfc(INFINITY, SCALE))
     check("0.157299207050285", M.erfc(1, SCALE))
   end
 
