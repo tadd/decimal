@@ -1,6 +1,5 @@
 * Modernize file location
 * Use TypedData
-* Preserve scale of zeros
 * Implement "decimal/compat/bigdecimal", a bigdecimal-compatible layer
 * Be a good friend with other Numeric classes (using Kernel.autoload?)
   - OtherNumerics#to_decimal, Decimal#to_*
@@ -23,3 +22,4 @@ done:
 - Implement decimal ** fixnum 
 - Create .document
 - GMP support with "--with-gmp" and inumgmp.h (via Ruby 2.1)
+- Preserve scale of zeros
