@@ -895,17 +895,14 @@ normal_divide(const Decimal *x, const Decimal *y, long scale, VALUE mode)
 static int
 valid_rounding_mode_p(VALUE sym)
 {
-    if (sym == ROUND_CEILING ||
+    return sym == ROUND_CEILING ||
         sym == ROUND_DOWN ||
         sym == ROUND_FLOOR ||
         sym == ROUND_HALF_DOWN ||
         sym == ROUND_HALF_EVEN ||
         sym == ROUND_HALF_UP ||
         sym == ROUND_UP ||
-        sym == ROUND_UNNECESSARY) {
-            return Qtrue;
-    }
-    return Qfalse;
+        sym == ROUND_UNNECESSARY;
 }
 
 /*
