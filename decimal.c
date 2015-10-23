@@ -691,10 +691,11 @@ dec_minus(VALUE x, VALUE y)
     if (DEC_VALUE_ISINF(y)) return NEGATE_INF(y);
 
     GetDecimal(x, a);
-    if (DEC_ZERO_P(a)) { /* FIXME: needs refactoring */
-	if (!DEC_ISINF(b) && DEC_ZERO_P(b) && a->inum == b->inum) {
-	     /* FIXME: UNDER CONSTRUCTION for scaling */
-	    return dec_pzero(MAX(a->scale, b->scale));
+    if (DEC_ZERO_P(a)) {
+	if (!DEC_ISINF(b) && DEC_ZERO_P(b)) {
+	    const long scale = MAX(a->scale, b->scale);
+	    if (a->inum == DEC_NZERO && b->inum == DEC_PZERO) return dec_nzero(scale);
+	    return dec_pzero(scale);
 	}
 	return dec_uminus(y);
     }

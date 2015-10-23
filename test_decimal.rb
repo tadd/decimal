@@ -239,16 +239,39 @@ class TestDecimal < Test::Unit::TestCase
   def test_zero_scale
     assert_equal('-0.0', (-Decimal('0.0')).to_s)
 
-    a, b, c, d = Decimal(0), Decimal("0.0"), Decimal("-0"), Decimal("-0.0")
-    assert_equal("0.0", (a + b).to_s)
-    assert_equal("-0.0", (c + d).to_s)
-    assert_equal("0.0", (a + d).to_s)
-    assert_equal("1.0", (b + ONE).to_s)
-
-    scaled_one = Decimal('1.0')
-    assert_equal('0.0', (scaled_one - scaled_one).to_s)
-
     scaled_zero = Decimal('0.0')
+    scaled_one = Decimal('1.0')
+
+    assert_equal("0.0", (ZERO + scaled_zero).to_s)
+    assert_equal("0.0", (ZERO + -scaled_zero).to_s)
+    assert_equal("0.0", (scaled_zero + ZERO).to_s)
+    assert_equal("0.0", (-scaled_zero + ZERO).to_s)
+
+    assert_equal("0.0", (-ZERO + scaled_zero).to_s)
+    assert_equal("-0.0", (-ZERO + -scaled_zero).to_s)
+    assert_equal("0.0", (scaled_zero + -ZERO).to_s)
+    assert_equal("-0.0", (-scaled_zero + -ZERO).to_s)
+
+    assert_equal("0.0", (ONE + -scaled_one).to_s)
+    assert_equal("0.0", (-scaled_one + ONE).to_s)
+    assert_equal("0.0", (-ONE + scaled_one).to_s)
+    assert_equal("0.0", (scaled_one + -ONE).to_s)
+
+    assert_equal("0.0", (ZERO - scaled_zero).to_s)
+    assert_equal("0.0", (ZERO - -scaled_zero).to_s)
+    assert_equal("0.0", (scaled_zero - ZERO).to_s)
+    assert_equal("-0.0", (-scaled_zero - ZERO).to_s)
+
+    assert_equal("-0.0", (-ZERO - scaled_zero).to_s)
+    assert_equal("0.0", (-ZERO - -scaled_zero).to_s)
+    assert_equal("0.0", (scaled_zero - -ZERO).to_s)
+    assert_equal("0.0", (-scaled_zero - -ZERO).to_s)
+
+    assert_equal("0.0", (ONE - scaled_one).to_s)
+    assert_equal("0.0", (scaled_one - ONE).to_s)
+    assert_equal("0.0", (-ONE - -scaled_one).to_s)
+    assert_equal("0.0", (-scaled_one - -ONE).to_s)
+
     assert_equal('0.00', (scaled_zero * scaled_zero).to_s)
     assert_equal('-0.00', (-scaled_zero * scaled_zero).to_s)
     assert_equal('-0.00', (scaled_zero * -scaled_zero).to_s)
