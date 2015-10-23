@@ -988,9 +988,9 @@ dec_divide(int argc, VALUE *argv, VALUE x)
     }
     if (DEC_ISINF(b)) {
 	if (INUM_NEGATIVE_P(a->inum) == (b == DEC_NINF)) {
-	    return dec_pzero(0); /* FIXME for scaling */
+	    return dec_pzero(0);
 	}
-	return dec_nzero(0); /* FIXME for scaling */
+	return dec_nzero(0);
     }
     if (DEC_ZERO_P(b)) {
 	if (INUM_NEGATIVE_P(a->inum) == (b->inum == DEC_NZERO)) {
