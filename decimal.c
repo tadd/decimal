@@ -748,16 +748,22 @@ dec_mul(VALUE x, VALUE y)
 	return dec_uminus(x);
     }
     if (DEC_ZERO_P(a)) {
+	long scale;
+	int b_negative;
 	if (DEC_ISINF(b)) return VALUE_NaN;
-	if (DEC_ZERO_P(b))  {
-	    return a->inum == DEC_PZERO ? y : dec_uminus(y);
-	}
-	if (INUM_NEGATIVE_P(b->inum)) return dec_uminus(x);
-	return x;
+	scale = a->scale + b->scale;
+	b_negative = DEC_ZERO_P(b) ? b->inum == DEC_NZERO : INUM_NEGATIVE_P(b->inum);
+	if (a->inum == DEC_NZERO ^ b_negative) return dec_nzero(scale);
+	return dec_pzero(scale);
     }
-    if (DEC_IMMEDIATE_P(b) || DEC_ZERO_P(b)) {
+    if (DEC_IMMEDIATE_P(b)) {
         if (INUM_NEGATIVE_P(a->inum)) return dec_uminus(y);
         return y;
+    }
+    if (DEC_ZERO_P(b)) {
+	const long scale = a->scale + b->scale;
+	if (INUM_NEGATIVE_P(a->inum) ^ b->inum == DEC_NZERO) return dec_nzero(scale);
+	return dec_pzero(scale);
     }
     return WrapDecimal(normal_mul(a, b));
 }
