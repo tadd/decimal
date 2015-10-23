@@ -236,56 +236,62 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("-0.0", Decimal("-1e#{min}").to_f.to_s)
   end
 
-  def test_zero_scale
+  def test_zero_scale_uminus
     assert_equal('-0.0', (-Decimal('0.0')).to_s)
+  end
 
-    scaled_zero = Decimal('0.0')
-    scaled_one = Decimal('1.0')
+  SCALED_ZERO = Decimal('0.0')
+  SCALED_ONE = Decimal('1.0')
 
-    assert_equal("0.0", (ZERO + scaled_zero).to_s)
-    assert_equal("0.0", (ZERO + -scaled_zero).to_s)
-    assert_equal("0.0", (scaled_zero + ZERO).to_s)
-    assert_equal("0.0", (-scaled_zero + ZERO).to_s)
+  def test_zero_scale_plus
+    assert_equal("0.0", (ZERO + SCALED_ZERO).to_s)
+    assert_equal("0.0", (ZERO + -SCALED_ZERO).to_s)
+    assert_equal("0.0", (SCALED_ZERO + ZERO).to_s)
+    assert_equal("0.0", (-SCALED_ZERO + ZERO).to_s)
 
-    assert_equal("0.0", (-ZERO + scaled_zero).to_s)
-    assert_equal("-0.0", (-ZERO + -scaled_zero).to_s)
-    assert_equal("0.0", (scaled_zero + -ZERO).to_s)
-    assert_equal("-0.0", (-scaled_zero + -ZERO).to_s)
+    assert_equal("0.0", (-ZERO + SCALED_ZERO).to_s)
+    assert_equal("-0.0", (-ZERO + -SCALED_ZERO).to_s)
+    assert_equal("0.0", (SCALED_ZERO + -ZERO).to_s)
+    assert_equal("-0.0", (-SCALED_ZERO + -ZERO).to_s)
 
-    assert_equal("0.0", (ONE + -scaled_one).to_s)
-    assert_equal("0.0", (-scaled_one + ONE).to_s)
-    assert_equal("0.0", (-ONE + scaled_one).to_s)
-    assert_equal("0.0", (scaled_one + -ONE).to_s)
+    assert_equal("0.0", (ONE + -SCALED_ONE).to_s)
+    assert_equal("0.0", (-SCALED_ONE + ONE).to_s)
+    assert_equal("0.0", (-ONE + SCALED_ONE).to_s)
+    assert_equal("0.0", (SCALED_ONE + -ONE).to_s)
+  end
 
-    assert_equal("0.0", (ZERO - scaled_zero).to_s)
-    assert_equal("0.0", (ZERO - -scaled_zero).to_s)
-    assert_equal("0.0", (scaled_zero - ZERO).to_s)
-    assert_equal("-0.0", (-scaled_zero - ZERO).to_s)
+  def test_zero_scale_minus
+    assert_equal("0.0", (ZERO - SCALED_ZERO).to_s)
+    assert_equal("0.0", (ZERO - -SCALED_ZERO).to_s)
+    assert_equal("0.0", (SCALED_ZERO - ZERO).to_s)
+    assert_equal("-0.0", (-SCALED_ZERO - ZERO).to_s)
 
-    assert_equal("-0.0", (-ZERO - scaled_zero).to_s)
-    assert_equal("0.0", (-ZERO - -scaled_zero).to_s)
-    assert_equal("0.0", (scaled_zero - -ZERO).to_s)
-    assert_equal("0.0", (-scaled_zero - -ZERO).to_s)
+    assert_equal("-0.0", (-ZERO - SCALED_ZERO).to_s)
+    assert_equal("0.0", (-ZERO - -SCALED_ZERO).to_s)
+    assert_equal("0.0", (SCALED_ZERO - -ZERO).to_s)
+    assert_equal("0.0", (-SCALED_ZERO - -ZERO).to_s)
 
-    assert_equal("0.0", (ONE - scaled_one).to_s)
-    assert_equal("0.0", (scaled_one - ONE).to_s)
-    assert_equal("0.0", (-ONE - -scaled_one).to_s)
-    assert_equal("0.0", (-scaled_one - -ONE).to_s)
+    assert_equal("0.0", (ONE - SCALED_ONE).to_s)
+    assert_equal("0.0", (SCALED_ONE - ONE).to_s)
+    assert_equal("0.0", (-ONE - -SCALED_ONE).to_s)
+    assert_equal("0.0", (-SCALED_ONE - -ONE).to_s)
+  end
 
-    assert_equal('0.00', (scaled_zero * scaled_zero).to_s)
-    assert_equal('-0.00', (-scaled_zero * scaled_zero).to_s)
-    assert_equal('-0.00', (scaled_zero * -scaled_zero).to_s)
-    assert_equal('0.00', (-scaled_zero * -scaled_zero).to_s)
+  def test_zero_scale_mul
+    assert_equal('0.00', (SCALED_ZERO * SCALED_ZERO).to_s)
+    assert_equal('-0.00', (-SCALED_ZERO * SCALED_ZERO).to_s)
+    assert_equal('-0.00', (SCALED_ZERO * -SCALED_ZERO).to_s)
+    assert_equal('0.00', (-SCALED_ZERO * -SCALED_ZERO).to_s)
 
-    assert_equal('0.00', (scaled_zero * scaled_one).to_s)
-    assert_equal('-0.00', (-scaled_zero * scaled_one).to_s)
-    assert_equal('-0.00', (scaled_zero * -scaled_one).to_s)
-    assert_equal('0.00', (-scaled_zero * -scaled_one).to_s)
+    assert_equal('0.00', (SCALED_ZERO * SCALED_ONE).to_s)
+    assert_equal('-0.00', (-SCALED_ZERO * SCALED_ONE).to_s)
+    assert_equal('-0.00', (SCALED_ZERO * -SCALED_ONE).to_s)
+    assert_equal('0.00', (-SCALED_ZERO * -SCALED_ONE).to_s)
 
-    assert_equal('0.00', (scaled_one * scaled_zero).to_s)
-    assert_equal('-0.00', (scaled_one * -scaled_zero).to_s)
-    assert_equal('-0.00', (-scaled_one * scaled_zero).to_s)
-    assert_equal('0.00', (-scaled_one * -scaled_zero).to_s)
+    assert_equal('0.00', (SCALED_ONE * SCALED_ZERO).to_s)
+    assert_equal('-0.00', (SCALED_ONE * -SCALED_ZERO).to_s)
+    assert_equal('-0.00', (-SCALED_ONE * SCALED_ZERO).to_s)
+    assert_equal('0.00', (-SCALED_ONE * -SCALED_ZERO).to_s)
   end
 
   # math part
