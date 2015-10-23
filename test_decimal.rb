@@ -241,7 +241,7 @@ class TestDecimal < Test::Unit::TestCase
     assert_equal("0.0", (a + b).to_s)
     assert_equal("-0.0", (c + d).to_s)
     assert_equal("0.0", (a + d).to_s)
-    assert_equal("1.0", (Decimal("0.0")+ONE).to_s)
+    assert_equal("1.0", (b + ONE).to_s)
   end
 
   # math part
