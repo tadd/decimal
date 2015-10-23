@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "decimal"
-  s.version = "0.1.3"
+  s.version = "0.1.3dev"
   s.summary = "(yet another) multi-precision decimal arithmetic library"
   s.description = <<-EOS.split("\n").map(&:lstrip).join(" ")
     Decimal is (yet another) multi-precision decimal arithmetic library.  It
