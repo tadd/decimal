@@ -17,11 +17,7 @@
 #include <string.h>
 
 #include <ruby.h>
-#ifdef HAVE_RUBY_UTIL_H
 #include <ruby/util.h>
-#else
-#include <util.h>
-#endif
 
 /*
  * unfortunately, few copies of Integer functions
