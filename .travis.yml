@@ -1,0 +1,16 @@
+language: ruby
+rvm:
+- ruby-head
+- 2.4.1
+- 2.3.4
+- 2.2.7
+- 2.1.10
+- 2.0.0
+- 1.9.3
+before_install:
+- gem install test-unit
+script:
+- ruby test_decimal.rb
+notification:
+  email:
+  - tad.a.digger@gmail.com
