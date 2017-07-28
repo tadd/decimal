@@ -9,6 +9,8 @@ rvm:
 - 1.9.3
 before_install:
 - gem install test-unit
+install:
+- make install
 script:
 - ruby test_decimal.rb
 notification:
