@@ -1,25 +1,25 @@
 language: ruby
 rvm:
-- ruby-head
-- 2.4.1
-- 2.3.4
-- 2.2.7
-- 2.1.10
-- 2.0.0
-- 1.9.3
+  - ruby-head
+  - 2.4.1
+  - 2.3.4
+  - 2.2.7
+  - 2.1.10
+  - 2.0.0
+  - 1.9.3
 compiler:
-- gcc
-- clang
+  - gcc
+  - clang
 os:
-- linux
-- osx
+  - linux
+  - osx
 before_install:
-- gem install test-unit
-- ruby extconf.rb
+  - gem install test-unit
+  - ruby extconf.rb
 install:
-- make install
+  - make install
 script:
-- ruby test_decimal.rb
+  - ruby test_decimal.rb
 notification:
   email:
-  - tad.a.digger@gmail.com
+    - tad.a.digger@gmail.com
