@@ -12,7 +12,7 @@ environment:
     - RUBY_VERSION: 200-x64
     - RUBY_VERSION: 193
 install:
-  - set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%
+  - set PATH=C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;%PATH%
   - gem install test-unit
   - ruby extconf.rb
   - nmake install
