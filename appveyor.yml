@@ -13,6 +13,7 @@ environment:
     - RUBY_VERSION: 193
 install:
   - set PATH=C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;%PATH%
+  - gem install rdoc
   - gem install test-unit
   - gem build decimal.gemspec
   - gem install ./decimal*.gem
