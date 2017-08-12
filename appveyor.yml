@@ -11,7 +11,6 @@ environment:
     - RUBY_VERSION: 200
     - RUBY_VERSION: 200-x64
     - RUBY_VERSION: 193
-    - RUBY_VERSION: 193-x64
 install:
   - set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%
   - gem install test-unit
