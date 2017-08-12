@@ -15,7 +15,7 @@ install:
   - set PATH=C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;%PATH%
   - gem install test-unit
   - ruby -rdevkit extconf.rb
-  - nmake install
+  - make install
 build: off
 before_test:
   - ruby -v
