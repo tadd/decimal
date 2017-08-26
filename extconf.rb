@@ -8,7 +8,8 @@ version = if have_func('rb_gc_mark_threads')
             '200'
           elsif have_func('rb_fork')
             '21'
-          elsif have_func('rb_quad_pack')
+          elsif have_var('ruby_sourceline')
+            have_func('rb_big_hash')
             '22'
           else
             have_func('rb_big_hash')
