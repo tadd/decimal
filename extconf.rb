@@ -11,6 +11,7 @@ version = if have_func('rb_gc_mark_threads')
           elsif have_func('rb_quad_pack')
             '22'
           else
+            have_func('rb_big_hash')
             '23'
           end
 $CFLAGS << " -DINUM_SOURCE_FILE=" + %(\\"inum#{version}.h\\")

@@ -1,5 +1,5 @@
 /*
- * Ruby's Integer part from trunk, r52118.
+ * Ruby's Integer part from trunk, r58513.
  *
  * These are hand copies (with few modifications) taken from original
  * Ruby's code in "numeric.c" and "bignum.c," so the copyrights are
@@ -2096,6 +2096,7 @@ rb_big_uminus(VALUE x)
     return rb_big_norm(z); /* modified to use exported one */
 }
 
+#ifndef HAVE_RB_BIG_HASH
 static VALUE
 rb_big_hash(VALUE x)
 {
@@ -2104,6 +2105,7 @@ rb_big_hash(VALUE x)
     hash = rb_memhash(BDIGITS(x), sizeof(BDIGIT)*BIGNUM_LEN(x)) ^ BIGNUM_SIGN(x);
     return INT2FIX(hash);
 }
+#endif
 
 static VALUE
 rb_big_odd_p(VALUE num)
@@ -2337,6 +2339,8 @@ int_pow(long x, unsigned long y)
 		VALUE v;
 	      bignum:
 		v = rb_big_pow(rb_int2big(x), LONG2NUM(y));
+		if (RB_FLOAT_TYPE_P(v)) /* infinity due to overflow */
+		    return v;
 		if (z != 1) v = rb_big_mul(rb_int2big(neg ? -z : z), v);
 		return v;
 	    }
